@@ -9,6 +9,7 @@ import {
   TableHead,
   TableRow,
   Chip,
+  TableContainer,
 } from '@mui/material';
 import { FileCheck, Shield } from 'lucide-react';
 import { api } from '../api/client';

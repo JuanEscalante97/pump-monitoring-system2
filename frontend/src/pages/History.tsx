@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  TableContainer,
 } from '@mui/material';
 import { History as HistoryIcon, Search, Edit3, ShieldAlert, Trash2 } from 'lucide-react';
 import { api } from '../api/client';

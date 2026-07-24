@@ -10,6 +10,7 @@ import {
   TableRow,
   Button,
   Chip,
+  TableContainer,
 } from '@mui/material';
 import { FileText, FileSpreadsheet, Download } from 'lucide-react';
 import { api } from '../api/client';

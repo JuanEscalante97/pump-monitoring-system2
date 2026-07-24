@@ -23,6 +23,7 @@ import {
   MenuItem,
   Checkbox,
   ListItemText,
+  TableContainer,
 } from '@mui/material';
 import { Workflow, Plus, CheckCircle2, Clock, Play, Square, AlertTriangle } from 'lucide-react';
 import { api } from '../api/client';

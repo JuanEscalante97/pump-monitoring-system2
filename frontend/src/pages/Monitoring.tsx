@@ -12,6 +12,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  TableContainer,
 } from '@mui/material';
 import { Activity, Plus, AlertCircle, Clock, ShieldAlert } from 'lucide-react';
 import { api } from '../api/client';
