@@ -166,7 +166,7 @@ export const Layout: React.FC = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0b0f19' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0b0f19', overflowX: 'hidden' }}>
       {/* AppBar */}
       <AppBar
         position="fixed"

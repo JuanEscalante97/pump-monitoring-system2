@@ -33,32 +33,34 @@ export const Audit: React.FC = () => {
       </Box>
 
       <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Fecha y Hora</TableCell>
-              <TableCell>Usuario</TableCell>
-              <TableCell>Acción Realizada</TableCell>
-              <TableCell>Entidad Afectada</TableCell>
-              <TableCell>Dirección IP</TableCell>
-              <TableCell>Detalles Técnicos</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {logs.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell sx={{ fontWeight: 700 }}>{new Date(log.fecha_hora).toLocaleString()}</TableCell>
-                <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>{log.username}</TableCell>
-                <TableCell>
-                  <Chip label={log.accion} size="small" color="primary" sx={{ fontWeight: 700 }} />
-                </TableCell>
-                <TableCell>{log.entidad} (ID: {log.entidad_id || '-'})</TableCell>
-                <TableCell sx={{ fontFamily: 'JetBrains Mono', fontSize: '0.85rem' }}>{log.ip_address || '127.0.0.1'}</TableCell>
-                <TableCell>{log.detalles || '-'}</TableCell>
+        <TableContainer component={Box} sx={{ overflowX: 'auto' }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Fecha y Hora</TableCell>
+                <TableCell>Usuario</TableCell>
+                <TableCell>Acción Realizada</TableCell>
+                <TableCell>Entidad Afectada</TableCell>
+                <TableCell>Dirección IP</TableCell>
+                <TableCell>Detalles Técnicos</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {logs.map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell sx={{ fontWeight: 700 }}>{new Date(log.fecha_hora).toLocaleString()}</TableCell>
+                  <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>{log.username}</TableCell>
+                  <TableCell>
+                    <Chip label={log.accion} size="small" color="primary" sx={{ fontWeight: 700 }} />
+                  </TableCell>
+                  <TableCell>{log.entidad} (ID: {log.entidad_id || '-'})</TableCell>
+                  <TableCell sx={{ fontFamily: 'JetBrains Mono', fontSize: '0.85rem' }}>{log.ip_address || '127.0.0.1'}</TableCell>
+                  <TableCell>{log.detalles || '-'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Paper>
     </Box>
   );

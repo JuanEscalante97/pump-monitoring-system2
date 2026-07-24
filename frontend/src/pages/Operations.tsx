@@ -151,56 +151,57 @@ export const Operations: React.FC = () => {
         <Typography variant="h6" sx={{ color: '#f8fafc', fontWeight: 700, mb: 2 }}>
           Historial de Operaciones de Embarque
         </Typography>
-
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Código</TableCell>
-              <TableCell>Fecha</TableCell>
-              <TableCell>Buque</TableCell>
-              <TableCell>Producto</TableCell>
-              <TableCell>Tanques</TableCell>
-              <TableCell>Bombas (Máx 3)</TableCell>
-              <TableCell>Hora Inicio / Fin</TableCell>
-              <TableCell>Estado</TableCell>
-              <TableCell align="right">Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {operations.map((op) => (
-              <TableRow key={op.id}>
-                <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>{op.codigo_operacion}</TableCell>
-                <TableCell>{op.fecha}</TableCell>
-                <TableCell>{op.buque?.nombre}</TableCell>
-                <TableCell>{op.producto?.nombre}</TableCell>
-                <TableCell>{op.tanks.map((t) => t.codigo).join(', ')}</TableCell>
-                <TableCell>{op.pumps.map((p) => p.codigo).join(', ')}</TableCell>
-                <TableCell>{op.hora_inicio} - {op.hora_fin || 'En Proceso'}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={op.estado}
-                    color={op.estado === 'Activa' ? 'success' : 'default'}
-                    size="small"
-                    sx={{ fontWeight: 700 }}
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  {op.estado === 'Activa' && (
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      startIcon={<Square size={14} />}
-                      onClick={() => handleFinishOperation(op.id)}
-                    >
-                      Finalizar
-                    </Button>
-                  )}
-                </TableCell>
+        <TableContainer component={Box} sx={{ overflowX: 'auto' }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Código</TableCell>
+                <TableCell>Fecha</TableCell>
+                <TableCell>Buque</TableCell>
+                <TableCell>Producto</TableCell>
+                <TableCell>Tanques</TableCell>
+                <TableCell>Bombas (Máx 3)</TableCell>
+                <TableCell>Hora Inicio / Fin</TableCell>
+                <TableCell>Estado</TableCell>
+                <TableCell align="right">Acciones</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {operations.map((op) => (
+                <TableRow key={op.id}>
+                  <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>{op.codigo_operacion}</TableCell>
+                  <TableCell>{op.fecha}</TableCell>
+                  <TableCell>{op.buque?.nombre}</TableCell>
+                  <TableCell>{op.producto?.nombre}</TableCell>
+                  <TableCell>{op.tanks.map((t) => t.codigo).join(', ')}</TableCell>
+                  <TableCell>{op.pumps.map((p) => p.codigo).join(', ')}</TableCell>
+                  <TableCell>{op.hora_inicio} - {op.hora_fin || 'En Proceso'}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={op.estado}
+                      color={op.estado === 'Activa' ? 'success' : 'default'}
+                      size="small"
+                      sx={{ fontWeight: 700 }}
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    {op.estado === 'Activa' && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        startIcon={<Square size={14} />}
+                        onClick={() => handleFinishOperation(op.id)}
+                      >
+                        Finalizar
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Paper>
 
       {/* Scheduled Inspections for Active Operation */}

@@ -202,68 +202,70 @@ export const History: React.FC = () => {
 
       {/* History Table */}
       <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Fecha y Hora</TableCell>
-              <TableCell>Bomba</TableCell>
-              <TableCell>P. Succión</TableCell>
-              <TableCell>P. Descarga</TableCell>
-              <TableCell>Temperatura</TableCell>
-              <TableCell>Corriente</TableCell>
-              <TableCell>Estado / Auditoría</TableCell>
-              <TableCell>Técnico Mecánico</TableCell>
-              <TableCell align="right">Acción</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {measurements.map((m) => (
-              <TableRow key={m.id}>
-                <TableCell sx={{ fontWeight: 700 }}>
-                  {m.fecha_registro} {m.hora_registro}
-                </TableCell>
-                <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>{m.bomba?.codigo}</TableCell>
-                <TableCell>{m.presion_succion_inhg} inHg</TableCell>
-                <TableCell>{m.presion_descarga_psi} psi</TableCell>
-                <TableCell sx={{ color: m.temperatura_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
-                  {m.temperatura_c}°C
-                </TableCell>
-                <TableCell sx={{ color: m.corriente_a > 45 ? '#ef4444' : '#38bdf8', fontWeight: 700 }}>
-                  {m.corriente_a} A
-                </TableCell>
-                <TableCell>
-                  {m.is_corrected ? (
-                    <Chip label="CORREGIDO" color="warning" size="small" sx={{ fontWeight: 700 }} />
-                  ) : (
-                    <Chip label="ORIGINAL" color="success" size="small" sx={{ fontWeight: 700 }} />
-                  )}
-                </TableCell>
-                <TableCell>{m.tecnico_mecanico || m.registrado_por?.full_name}</TableCell>
-                <TableCell align="right" sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<Edit3 size={14} />}
-                    onClick={() => openCorrectionModal(m)}
-                  >
-                    Corregir
-                  </Button>
-                  {user?.role === 'Administrador' && (
+        <TableContainer component={Box} sx={{ overflowX: 'auto' }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Fecha y Hora</TableCell>
+                <TableCell>Bomba</TableCell>
+                <TableCell>P. Succión</TableCell>
+                <TableCell>P. Descarga</TableCell>
+                <TableCell>Temperatura</TableCell>
+                <TableCell>Corriente</TableCell>
+                <TableCell>Estado / Auditoría</TableCell>
+                <TableCell>Técnico Mecánico</TableCell>
+                <TableCell align="right">Acción</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {measurements.map((m) => (
+                <TableRow key={m.id}>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    {m.fecha_registro} {m.hora_registro}
+                  </TableCell>
+                  <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>{m.bomba?.codigo}</TableCell>
+                  <TableCell>{m.presion_succion_inhg} inHg</TableCell>
+                  <TableCell>{m.presion_descarga_psi} psi</TableCell>
+                  <TableCell sx={{ color: m.temperatura_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
+                    {m.temperatura_c}°C
+                  </TableCell>
+                  <TableCell sx={{ color: m.corriente_a > 45 ? '#ef4444' : '#38bdf8', fontWeight: 700 }}>
+                    {m.corriente_a} A
+                  </TableCell>
+                  <TableCell>
+                    {m.is_corrected ? (
+                      <Chip label="CORREGIDO" color="warning" size="small" sx={{ fontWeight: 700 }} />
+                    ) : (
+                      <Chip label="ORIGINAL" color="success" size="small" sx={{ fontWeight: 700 }} />
+                    )}
+                  </TableCell>
+                  <TableCell>{m.tecnico_mecanico || m.registrado_por?.full_name}</TableCell>
+                  <TableCell align="right" sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                     <Button
                       variant="outlined"
-                      color="error"
                       size="small"
-                      startIcon={<Trash2 size={14} />}
-                      onClick={() => handleDelete(m.id)}
+                      startIcon={<Edit3 size={14} />}
+                      onClick={() => openCorrectionModal(m)}
                     >
-                      Eliminar
+                      Corregir
                     </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                    {user?.role === 'Administrador' && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        startIcon={<Trash2 size={14} />}
+                        onClick={() => handleDelete(m.id)}
+                      >
+                        Eliminar
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Paper>
 
       {/* Correction Dialog */}

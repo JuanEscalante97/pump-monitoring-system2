@@ -133,54 +133,65 @@ export const Monitoring: React.FC = () => {
               Lecturas Registradas en la Operación Actual ({measurements.length})
             </Typography>
 
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Estampa Servidor (Hora)</TableCell>
-                  <TableCell>Bomba</TableCell>
-                  <TableCell>P. Succión (inHg)</TableCell>
-                  <TableCell>P. Descarga (psi)</TableCell>
-                  <TableCell>Temp. Motor (°C)</TableCell>
-                  <TableCell>Corriente (A)</TableCell>
-                  <TableCell>Estado Alarma</TableCell>
-                  <TableCell>Registrado Por</TableCell>
-                  <TableCell>Observaciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {measurements.map((m) => {
-                  const isAlarm = m.temperatura_c > 80.0 || m.corriente_a > 45.0;
-                  return (
-                    <TableRow key={m.id}>
-                      <TableCell sx={{ fontWeight: 700, color: '#f8fafc' }}>
-                        {m.hora_registro}
+            <TableContainer component={Box} sx={{ overflowX: 'auto' }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Estampa Servidor (Hora)</TableCell>
+                    <TableCell>Bomba</TableCell>
+                    <TableCell>P. Succión (inHg)</TableCell>
+                    <TableCell>P. Descarga (psi)</TableCell>
+                    <TableCell>Temp. Motor (°C)</TableCell>
+                    <TableCell>Corriente (A)</TableCell>
+                    <TableCell>Estado Alarma</TableCell>
+                    <TableCell>Técnico Mecánico</TableCell>
+                    <TableCell>Registrado Por</TableCell>
+                    <TableCell>Observaciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {measurements.map((m) => {
+                    const isAlarm = m.temperatura_c > 80.0 || m.corriente_a > 45.0;
+                    return (
+                      <TableRow key={m.id}>
+                        <TableCell sx={{ fontWeight: 700, color: '#f8fafc' }}>
+                          {m.fecha_registro} {m.hora_registro}
+                        </TableCell>
+                        <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>
+                          {m.bomba?.codigo} ({m.bomba?.nombre})
+                        </TableCell>
+                        <TableCell>{m.presion_succion_inhg}</TableCell>
+                        <TableCell>{m.presion_descarga_psi}</TableCell>
+                        <TableCell sx={{ color: m.temperatura_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
+                          {m.temperatura_c}
+                        </TableCell>
+                        <TableCell sx={{ color: m.corriente_a > 45 ? '#ef4444' : '#38bdf8', fontWeight: 700 }}>
+                          {m.corriente_a}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={isAlarm ? 'CRÍTICO' : 'NORMAL'}
+                            color={isAlarm ? 'error' : 'success'}
+                            size="small"
+                            sx={{ fontWeight: 700 }}
+                          />
+                        </TableCell>
+                        <TableCell>{m.tecnico_mecanico || '-'}</TableCell>
+                        <TableCell>{m.registrado_por?.full_name}</TableCell>
+                        <TableCell>{m.observaciones || '-'}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {measurements.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={10} align="center" sx={{ py: 3, color: '#94a3b8' }}>
+                        Aún no se han registrado lecturas en esta operación.
                       </TableCell>
-                      <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>
-                        {m.bomba?.codigo} ({m.bomba?.nombre})
-                      </TableCell>
-                      <TableCell>{m.presion_succion_inhg} inHg</TableCell>
-                      <TableCell>{m.presion_descarga_psi} psi</TableCell>
-                      <TableCell sx={{ color: m.temperatura_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
-                        {m.temperatura_c}°C
-                      </TableCell>
-                      <TableCell sx={{ color: m.corriente_a > 45 ? '#ef4444' : '#38bdf8', fontWeight: 700 }}>
-                        {m.corriente_a} A
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={isAlarm ? 'CRÍTICO' : 'NORMAL'}
-                          color={isAlarm ? 'error' : 'success'}
-                          size="small"
-                          sx={{ fontWeight: 700 }}
-                        />
-                      </TableCell>
-                      <TableCell>{m.registrado_por?.full_name}</TableCell>
-                      <TableCell>{m.observaciones || '-'}</TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Paper>
 
           {/* Modal */}
