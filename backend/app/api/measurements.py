@@ -133,3 +133,31 @@ def correct_measurement(
     )
 
     return measurement
+
+@router.delete("/{measurement_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_measurement(
+    measurement_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "Administrador":
+        raise HTTPException(
+            status_code=403,
+            detail="No tiene permisos suficientes para eliminar registros del historial."
+        )
+
+    measurement = db.query(Measurement).filter(Measurement.id == measurement_id).first()
+    if not measurement:
+        raise HTTPException(status_code=404, detail="Medición no encontrada")
+
+    # Optional: Delete associated alarms? Cascade usually handles it.
+    db.delete(measurement)
+    db.commit()
+
+    log_audit_action(
+        db, current_user, "DELETE_MEASUREMENT", "Measurement", measurement_id,
+        get_client_ip(request), 
+        f"Medición eliminada permanentemente del historial por el Administrador."
+    )
+

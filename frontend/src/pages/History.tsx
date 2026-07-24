@@ -18,11 +18,13 @@ import {
   DialogActions,
   Alert,
 } from '@mui/material';
-import { History as HistoryIcon, Search, Edit3, ShieldAlert } from 'lucide-react';
+import { History as HistoryIcon, Search, Edit3, ShieldAlert, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
 import { Measurement, Pump, Vessel, Product } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 export const History: React.FC = () => {
+  const { user } = useAuth();
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [pumps, setPumps] = useState<Pump[]>([]);
   const [vessels, setVessels] = useState<Vessel[]>([]);
@@ -109,6 +111,18 @@ export const History: React.FC = () => {
       handleSearch();
     } catch (err: any) {
       setCorrError(err.response?.data?.detail || 'Error al guardar la corrección.');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("¿Está seguro que desea eliminar permanentemente este registro del historial? Esta acción no se puede deshacer.")) {
+      return;
+    }
+    try {
+      await api.delete(`/measurements/${id}`);
+      handleSearch();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al eliminar el registro.');
     }
   };
 
@@ -223,7 +237,7 @@ export const History: React.FC = () => {
                   )}
                 </TableCell>
                 <TableCell>{m.tecnico_mecanico || m.registrado_por?.full_name}</TableCell>
-                <TableCell align="right">
+                <TableCell align="right" sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                   <Button
                     variant="outlined"
                     size="small"
@@ -232,6 +246,17 @@ export const History: React.FC = () => {
                   >
                     Corregir
                   </Button>
+                  {user?.role === 'Administrador' && (
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      startIcon={<Trash2 size={14} />}
+                      onClick={() => handleDelete(m.id)}
+                    >
+                      Eliminar
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
