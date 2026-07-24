@@ -106,7 +106,11 @@ export const Layout: React.FC = () => {
 
       {/* Navigation List */}
       <List sx={{ px: 1.5, py: 2, flexGrow: 1 }}>
-        {menuItems.map((item) => {
+        {menuItems.filter(item => {
+          if (item.text === 'Auditoría' && user?.role !== 'Administrador') return false;
+          if (item.text === 'Catálogos' && user?.role !== 'Administrador') return false;
+          return true;
+        }).map((item) => {
           const active = location.pathname === item.path;
           return (
             <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>

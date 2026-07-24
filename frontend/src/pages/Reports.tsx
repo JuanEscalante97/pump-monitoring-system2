@@ -23,11 +23,11 @@ export const Reports: React.FC = () => {
   }, []);
 
   const handleDownloadPDF = (opId: number, opCode: string) => {
-    window.open(`/api/reports/operation/${opId}/pdf`, '_blank');
+    window.open(`${api.defaults.baseURL}/reports/operation/${opId}/pdf`, '_blank');
   };
 
   const handleDownloadExcel = (opId: number, opCode: string) => {
-    window.open(`/api/reports/operation/${opId}/excel`, '_blank');
+    window.open(`${api.defaults.baseURL}/reports/operation/${opId}/excel`, '_blank');
   };
 
   return (

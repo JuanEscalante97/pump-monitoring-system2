@@ -123,7 +123,7 @@ export const Dashboard: React.FC = () => {
       {/* KPI Cards Grid */}
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
         {/* Card 1: Active Operations */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3, borderLeft: '4px solid #3182ce' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>OPERACIONES ACTIVAS</Typography>
@@ -138,24 +138,8 @@ export const Dashboard: React.FC = () => {
           </Paper>
         </Grid>
 
-        {/* Card 2: Pending Inspections */}
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3, borderLeft: '4px solid #f59e0b' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>INSPECCIONES PENDIENTES</Typography>
-              <Clock size={20} color="#f59e0b" />
-            </Box>
-            <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700, mt: 1 }}>
-              {kpis?.inspecciones_pendientes || 0}
-            </Typography>
-            <Typography variant="caption" sx={{ color: kpis?.inspecciones_atrasadas ? '#ef4444' : '#10b981', fontWeight: 600 }}>
-              {kpis?.inspecciones_atrasadas || 0} Retrasadas
-            </Typography>
-          </Paper>
-        </Grid>
-
         {/* Card 3: Avg Temp */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3, borderLeft: '4px solid #ef4444' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>TEMP PROMEDIO MOTOR</Typography>
@@ -171,7 +155,7 @@ export const Dashboard: React.FC = () => {
         </Grid>
 
         {/* Card 4: Avg Current */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3, borderLeft: '4px solid #10b981' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>CORRIENTE PROMEDIO</Typography>

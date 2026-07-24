@@ -148,9 +148,16 @@ def get_chart_data(
     p_suc_series = []
     p_desc_series = []
 
+    def round_time_to_nearest_hour(t):
+        if t.minute >= 30:
+            next_hour = (t.hour + 1) % 24
+            return f"{next_hour:02d}:00"
+        return f"{t.hour:02d}:00"
+
     for m in measurements:
         bomba_code = m.bomba.codigo if m.bomba else f"Bomba {m.bomba_id}"
-        labels.append(f"{m.hora_registro.strftime('%H:%M')} ({bomba_code})")
+        rounded_time = round_time_to_nearest_hour(m.hora_registro)
+        labels.append(f"{rounded_time} ({bomba_code})")
         temp_series.append(m.temperatura_c)
         curr_series.append(m.corriente_a)
         p_suc_series.append(m.presion_succion_inhg)
