@@ -82,6 +82,7 @@ export interface Measurement {
   presion_descarga_psi: number;
   temperatura_c: number;
   corriente_a: number;
+  tecnico_mecanico?: string;
   observaciones?: string;
   registrado_por_id: number;
   fecha_registro: string;
