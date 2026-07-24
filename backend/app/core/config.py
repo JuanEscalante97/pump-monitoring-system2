@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     
     @property
     def USE_SQLITE(self) -> bool:
-        env_val = str(os.getenv("USE_SQLITE", "true")).strip().lower()
+        env_val = str(os.getenv("USE_SQLITE", "false")).strip().lower()
         return env_val in ("true", "1", "yes")
 
 
