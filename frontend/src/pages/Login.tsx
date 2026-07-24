@@ -15,8 +15,8 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 
 export const Login: React.FC = () => {
-  const [username, setUsername] = useState('mantenimiento');
-  const [password, setPassword] = useState('mantenimiento123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

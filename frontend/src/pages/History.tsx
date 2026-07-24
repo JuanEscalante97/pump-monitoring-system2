@@ -157,6 +157,7 @@ export const History: React.FC = () => {
               fullWidth
               label="Filtrar por Bomba"
               value={bombaId}
+              InputLabelProps={{ shrink: true }}
               onChange={(e) => setBombaId(e.target.value)}
               SelectProps={{ native: true }}
             >
@@ -173,6 +174,7 @@ export const History: React.FC = () => {
               fullWidth
               label="Filtrar por Buque"
               value={buqueId}
+              InputLabelProps={{ shrink: true }}
               onChange={(e) => setBuqueId(e.target.value)}
               SelectProps={{ native: true }}
             >
