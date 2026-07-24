@@ -271,7 +271,9 @@ export const Layout: React.FC = () => {
         sx={{
           flexGrow: 1,
           p: { xs: 2, sm: 3 },
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` },
+          maxWidth: '1200px',
+          mx: 'auto',
           mt: 8,
           backgroundColor: '#0b0f19',
           minHeight: 'calc(100vh - 64px)',

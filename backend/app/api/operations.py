@@ -133,3 +133,33 @@ def finish_operation(
     )
 
     return operation
+
+@router.delete("/{operation_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_operation(
+    operation_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "Administrador":
+        raise HTTPException(status_code=403, detail="Permisos insuficientes para eliminar operaciones")
+        
+    operation = db.query(Operation).filter(Operation.id == operation_id).first()
+    if not operation:
+        raise HTTPException(status_code=404, detail="Operación no encontrada")
+        
+    codigo = operation.codigo_operacion
+    
+    # Reset pump states if it was active
+    if operation.estado != "Finalizada":
+        for p in operation.pumps:
+            p.estado = "Operativa"
+            
+    db.delete(operation)
+    db.commit()
+
+    log_audit_action(
+        db, current_user, "DELETE_OPERATION", "Operation", operation_id,
+        get_client_ip(request), f"Operación eliminada: {codigo}"
+    )
+    return None

@@ -28,8 +28,11 @@ import {
 import { Workflow, Plus, CheckCircle2, Clock, Play, Square, AlertTriangle } from 'lucide-react';
 import { api } from '../api/client';
 import { Operation, Pump, Tank, Vessel, Product } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { Trash2 } from 'lucide-react';
 
 export const Operations: React.FC = () => {
+  const { user } = useAuth();
   const [operations, setOperations] = useState<Operation[]>([]);
   const [pumps, setPumps] = useState<Pump[]>([]);
   const [tanks, setTanks] = useState<Tank[]>([]);
@@ -105,12 +108,26 @@ export const Operations: React.FC = () => {
   };
 
   const handleFinishOperation = async (id: number) => {
-    if (!window.confirm('¿Está seguro de finalizar esta operación de bombeo?')) return;
+    if (!window.confirm('¿Está seguro de finalizar esta operación? Las bombas volverán a estado Operativa y no se podrán registrar más lecturas.')) {
+      return;
+    }
     try {
       await api.put(`/operations/${id}/finish`);
       loadData();
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Error al finalizar la operación.');
+      alert(err.response?.data?.detail || 'Error al finalizar la operación');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('¿Está seguro de que desea eliminar esta operación y TODO su historial de lecturas asociado? Esta acción es irreversible.')) {
+      return;
+    }
+    try {
+      await api.delete(`/operations/${id}`);
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al eliminar la operación');
     }
   };
 
@@ -186,17 +203,30 @@ export const Operations: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell align="right">
-                    {op.estado === 'Activa' && (
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        startIcon={<Square size={14} />}
-                        onClick={() => handleFinishOperation(op.id)}
-                      >
-                        Finalizar
-                      </Button>
-                    )}
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                      {op.estado === 'Activa' && (
+                        <Button
+                          variant="outlined"
+                          color="warning"
+                          size="small"
+                          startIcon={<Square size={14} />}
+                          onClick={() => handleFinishOperation(op.id)}
+                        >
+                          Finalizar
+                        </Button>
+                      )}
+                      {user?.role === 'Administrador' && (
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          startIcon={<Trash2 size={14} />}
+                          onClick={() => handleDelete(op.id)}
+                        >
+                          Eliminar
+                        </Button>
+                      )}
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}

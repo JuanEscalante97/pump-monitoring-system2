@@ -22,3 +22,21 @@ def get_audit_logs(
         query = query.filter(AuditLog.entidad == entidad)
 
     return query.order_by(AuditLog.fecha_hora.desc()).limit(200).all()
+
+@router.delete("/{log_id}", status_code=204)
+def delete_audit_log(
+    log_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from fastapi import HTTPException
+    if current_user.role != "Administrador":
+        raise HTTPException(status_code=403, detail="Permisos insuficientes para eliminar logs")
+        
+    log = db.query(AuditLog).filter(AuditLog.id == log_id).first()
+    if not log:
+        raise HTTPException(status_code=404, detail="Log no encontrado")
+        
+    db.delete(log)
+    db.commit()
+    return None

@@ -23,12 +23,27 @@ export const Reports: React.FC = () => {
     api.get('/operations').then((res) => setOperations(res.data));
   }, []);
 
+  const downloadFile = async (url: string, filename: string) => {
+    try {
+      const response = await api.get(url, { responseType: 'blob' });
+      const blob = new Blob([response.data]);
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      window.URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error('Error downloading file', error);
+      alert('No se pudo descargar el archivo. Verifique sus permisos.');
+    }
+  };
+
   const handleDownloadPDF = (opId: number, opCode: string) => {
-    window.open(`${api.defaults.baseURL}/reports/operation/${opId}/pdf`, '_blank');
+    downloadFile(`/reports/operation/${opId}/pdf`, `Reporte_${opCode}.pdf`);
   };
 
   const handleDownloadExcel = (opId: number, opCode: string) => {
-    window.open(`${api.defaults.baseURL}/reports/operation/${opId}/excel`, '_blank');
+    downloadFile(`/reports/operation/${opId}/excel`, `Reporte_${opCode}.xlsx`);
   };
 
   return (

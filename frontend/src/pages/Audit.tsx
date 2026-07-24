@@ -9,18 +9,34 @@ import {
   TableHead,
   TableRow,
   Chip,
-  TableContainer,
+  Button,
 } from '@mui/material';
-import { FileCheck, Shield } from 'lucide-react';
+import { FileCheck, Shield, Trash2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import { AuditLog } from '../types';
 
 export const Audit: React.FC = () => {
+  const { user } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
 
-  useEffect(() => {
+  const loadLogs = () => {
     api.get('/audit').then((res) => setLogs(res.data));
+  };
+
+  useEffect(() => {
+    loadLogs();
   }, []);
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('¿Está seguro de eliminar este registro de auditoría?')) return;
+    try {
+      await api.delete(`/audit/${id}`);
+      loadLogs();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al eliminar el registro');
+    }
+  };
 
   return (
     <Box>
@@ -44,6 +60,7 @@ export const Audit: React.FC = () => {
                 <TableCell>Entidad Afectada</TableCell>
                 <TableCell>Dirección IP</TableCell>
                 <TableCell>Detalles Técnicos</TableCell>
+                {user?.role === 'Administrador' && <TableCell align="right">Acción</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -57,6 +74,19 @@ export const Audit: React.FC = () => {
                   <TableCell>{log.entidad} (ID: {log.entidad_id || '-'})</TableCell>
                   <TableCell sx={{ fontFamily: 'JetBrains Mono', fontSize: '0.85rem' }}>{log.ip_address || '127.0.0.1'}</TableCell>
                   <TableCell>{log.detalles || '-'}</TableCell>
+                  {user?.role === 'Administrador' && (
+                    <TableCell align="right">
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        startIcon={<Trash2 size={14} />}
+                        onClick={() => handleDelete(log.id)}
+                      >
+                        Eliminar
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
