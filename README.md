@@ -116,13 +116,6 @@ El script de inicialización cargará automáticamente los datos de prueba inici
 
 ---
 
-## 🔑 Credenciales de Acceso por Defecto
-
-| Usuario | Contraseña | Rol | Descripción |
-| :--- | :--- | :--- | :--- |
-| `mantenimiento` | `mantenimiento123` | Mantenimiento | Registro de inspecciones y mediciones de campo |
-| `admin` | `admin123` | Administrador | Gestión completa de catálogos y configuración |
-
 ---
 
 ## 🔮 Funciones Futuras (Preparadas en Código)
