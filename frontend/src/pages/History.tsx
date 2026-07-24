@@ -196,7 +196,7 @@ export const History: React.FC = () => {
               <TableCell>Temperatura</TableCell>
               <TableCell>Corriente</TableCell>
               <TableCell>Estado / Auditoría</TableCell>
-              <TableCell>Inspector</TableCell>
+              <TableCell>Técnico Mecánico</TableCell>
               <TableCell align="right">Acción</TableCell>
             </TableRow>
           </TableHead>
@@ -222,7 +222,7 @@ export const History: React.FC = () => {
                     <Chip label="ORIGINAL" color="success" size="small" sx={{ fontWeight: 700 }} />
                   )}
                 </TableCell>
-                <TableCell>{m.registrado_por?.full_name}</TableCell>
+                <TableCell>{m.tecnico_mecanico || m.registrado_por?.full_name}</TableCell>
                 <TableCell align="right">
                   <Button
                     variant="outlined"

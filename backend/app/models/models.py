@@ -166,6 +166,7 @@ class Measurement(Base):
     corriente_a = Column(Float, nullable=False)
     observaciones = Column(Text, nullable=True)
     registrado_por_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    tecnico_mecanico = Column(String(100), nullable=True)
     fecha_registro = Column(Date, nullable=False)
     hora_registro = Column(Time, nullable=False)
     datetime_registro = Column(DateTime(timezone=True), nullable=False)

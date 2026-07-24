@@ -40,6 +40,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
   const [presionDescarga, setPresionDescarga] = useState<string>('85.0');
   const [temperatura, setTemperatura] = useState<string>('68.0');
   const [corriente, setCorriente] = useState<string>('36.0');
+  const [tecnicoMecanico, setTecnicoMecanico] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>('');
 
   const [loading, setLoading] = useState(false);
@@ -65,6 +66,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
         presion_descarga_psi: parseFloat(presionDescarga),
         temperatura_c: parseFloat(temperatura),
         corriente_a: parseFloat(corriente),
+        tecnico_mecanico: tecnicoMecanico,
         observaciones,
       };
 
@@ -111,11 +113,22 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ color: '#cbd5e1', mt: 0.5, fontSize: '0.82rem' }}>
-              La fecha, hora exacta y usuario inspector se registrarán automáticamente utilizando el reloj oficial del servidor.
+              La fecha y hora exacta se registrarán automáticamente utilizando el reloj oficial del servidor.
             </Typography>
           </Paper>
 
           <Grid container spacing={2}>
+            {/* Técnico Mecánico */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Nombre del Técnico Mecánico"
+                value={tecnicoMecanico}
+                onChange={(e) => setTecnicoMecanico(e.target.value)}
+                required
+                sx={{ mb: 1 }}
+              />
+            </Grid>
             {/* Pump Selection */}
             <Grid item xs={12}>
               <TextField

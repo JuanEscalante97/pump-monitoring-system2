@@ -176,6 +176,7 @@ class MeasurementCreate(BaseModel):
     presion_descarga_psi: float
     temperatura_c: float
     corriente_a: float
+    tecnico_mecanico: str
     observaciones: Optional[str] = None
 
 class MeasurementCorrection(BaseModel):
@@ -194,6 +195,7 @@ class MeasurementResponse(BaseModel):
     presion_descarga_psi: float
     temperatura_c: float
     corriente_a: float
+    tecnico_mecanico: Optional[str] = None
     observaciones: Optional[str] = None
     registrado_por_id: int
     fecha_registro: date

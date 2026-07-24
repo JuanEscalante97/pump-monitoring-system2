@@ -68,6 +68,7 @@ def create_measurement(
         temperatura_c=m_in.temperatura_c,
         corriente_a=m_in.corriente_a,
         observaciones=m_in.observaciones,
+        tecnico_mecanico=m_in.tecnico_mecanico,
         registrado_por_id=current_user.id,
         fecha_registro=now_dt.date(),
         hora_registro=now_dt.time(),
