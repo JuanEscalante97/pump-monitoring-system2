@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: pump_postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pump_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pump_secure_password_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-pump_monitoring_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pump_user} -d ${POSTGRES_DB:-pump_monitoring_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pump_backend_api
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pump_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pump_secure_password_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-pump_monitoring_db}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pump_user}:${POSTGRES_PASSWORD:-pump_secure_password_2026}@db:5432/${POSTGRES_DB:-pump_monitoring_db}
+      SECRET_KEY: ${SECRET_KEY:-super_secret_jwt_key_pump_monitoring_2026_enterprise_system}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python scripts/seed_data.py && uvicorn main:app --host 0.0.0.0 --port 8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pump_frontend_ui
+    restart: always
+    ports:
+      - "80:80"
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
