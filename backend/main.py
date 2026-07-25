@@ -41,11 +41,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from sqlalchemy import text
+
 # Create database tables automatically on startup
 @app.on_event("startup")
 def startup_db():
     logger.info("Inicializando tablas en la base de datos PostgreSQL...")
     Base.metadata.create_all(bind=engine)
+    
+    # Parche automático para agregar tanque_id a measurements si no existe
+    try:
+        with engine.begin() as conn:
+            # Postgres / SQLite compatible way to add column if it fails we just catch and ignore
+            try:
+                conn.execute(text("ALTER TABLE measurements ADD COLUMN tanque_id INTEGER REFERENCES tanks(id)"))
+                logger.info("Columna 'tanque_id' añadida exitosamente a measurements.")
+            except Exception as e:
+                # Column probably exists
+                logger.info("Columna 'tanque_id' ya existe o no se pudo añadir (ignorado).")
+    except Exception as e:
+        logger.error(f"Error en parche de BD: {e}")
+
     logger.info("Tablas creadas/verificadas exitosamente.")
 
 # Register APIRouters

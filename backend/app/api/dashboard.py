@@ -78,12 +78,13 @@ def get_pid_diagram_data(
     
     if active_op:
         # PUMPS: Distinct pumps that have measurements in this active operation
-        pumps_list = db.query(Pump).join(Measurement).filter(Measurement.operation_id == active_op.id).distinct().all()
-        # If no measurements yet, maybe show all pumps or none. Let's show none until they measure.
-        all_tanks = db.query(Tank).all() # Just show all tanks in the terminal
+        pumps_list = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == active_op.id).distinct().all()
+        
+        # TANKS: Distinct tanks that have measurements in this active operation
+        tanks_list = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == active_op.id).distinct().all()
     else:
         pumps_list = []
-        all_tanks = []
+        tanks_list = []
 
     pumps_status = []
     for p in pumps_list:
@@ -113,7 +114,7 @@ def get_pid_diagram_data(
 
     return PIDProcessData(
         active_operation=OperationResponse.model_validate(active_op) if active_op else None,
-        tanks=[TankResponse.model_validate(t) for t in all_tanks],
+        tanks=[TankResponse.model_validate(t) for t in tanks_list],
         pumps_status=pumps_status,
         vessel=VesselResponse.model_validate(active_op.buque) if (active_op and active_op.buque) else None,
         product=ProductResponse.model_validate(active_op.producto) if (active_op and active_op.producto) else None

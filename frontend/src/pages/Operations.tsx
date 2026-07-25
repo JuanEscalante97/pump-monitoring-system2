@@ -224,46 +224,6 @@ export const Operations: React.FC = () => {
         </TableContainer>
       </Paper>
 
-      {/* Scheduled Inspections for Active Operation */}
-      {activeOp && (
-        <Paper sx={{ p: 2.5, mt: 3, backgroundColor: '#0f172a', borderRadius: 3 }}>
-          <Typography variant="h6" sx={{ color: '#f8fafc', fontWeight: 700, mb: 2 }}>
-            Inspecciones Programadas Automáticas Cada Hora (Operación {activeOp.codigo_operacion})
-          </Typography>
-
-          <Grid container spacing={1.5}>
-            {activeOp.scheduled_inspections.map((insp) => (
-              <Grid item xs={12} sm={6} md={3} key={insp.id}>
-                <Paper
-                  sx={{
-                    p: 1.5,
-                    backgroundColor: insp.estado === 'A tiempo' ? 'rgba(16, 185, 129, 0.1)' : insp.estado === 'Retrasado' ? 'rgba(239, 68, 68, 0.1)' : '#1e293b',
-                    border: `1px solid ${insp.estado === 'A tiempo' ? '#10b981' : insp.estado === 'Retrasado' ? '#ef4444' : '#334155'}`,
-                    borderRadius: 2,
-                  }}
-                >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="subtitle2" sx={{ color: '#f8fafc', fontWeight: 700 }}>
-                      Slot Hora: {insp.hora_programada}
-                    </Typography>
-                    <Chip
-                      label={insp.estado}
-                      size="small"
-                      color={insp.estado === 'A tiempo' ? 'success' : insp.estado === 'Retrasado' ? 'error' : 'default'}
-                    />
-                  </Box>
-                  {insp.retraso_minutos > 0 && (
-                    <Typography variant="caption" sx={{ color: '#ef4444', display: 'block', mt: 0.5, fontWeight: 700 }}>
-                      Retraso: {insp.retraso_minutos} minutos
-                    </Typography>
-                  )}
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
-        </Paper>
-      )}
-
       {/* New Operation Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { backgroundColor: '#0f172a' } }}>
         <DialogTitle sx={{ color: '#f8fafc', fontWeight: 700 }}>Iniciar Nueva Operación de Bombeo</DialogTitle>

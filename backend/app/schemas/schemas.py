@@ -169,15 +169,18 @@ class OperationResponse(BaseModel):
 
 # --- MEASUREMENT SCHEMAS ---
 # Client DOES NOT send date or time! Server automatically sets them.
-class MeasurementCreate(BaseModel):
-    operation_id: int
+class MeasurementBase(BaseModel):
     bomba_id: int
+    tanque_id: Optional[int] = None
     presion_succion_inhg: float
     presion_descarga_psi: float
     temperatura_c: float
     corriente_a: float
-    tecnico_mecanico: str
     observaciones: Optional[str] = None
+    tecnico_mecanico: Optional[str] = None
+
+class MeasurementCreate(MeasurementBase):
+    operation_id: int
 
 class MeasurementCorrection(BaseModel):
     presion_succion_inhg: float
@@ -186,17 +189,10 @@ class MeasurementCorrection(BaseModel):
     corriente_a: float
     corregido_motivo: str
 
-class MeasurementResponse(BaseModel):
+class MeasurementResponse(MeasurementBase):
     id: int
     operation_id: int
-    bomba_id: int
     inspection_id: Optional[int] = None
-    presion_succion_inhg: float
-    presion_descarga_psi: float
-    temperatura_c: float
-    corriente_a: float
-    tecnico_mecanico: Optional[str] = None
-    observaciones: Optional[str] = None
     registrado_por_id: int
     fecha_registro: date
     hora_registro: time
@@ -204,6 +200,7 @@ class MeasurementResponse(BaseModel):
     is_corrected: bool
     corregido_motivo: Optional[str] = None
     bomba: Optional[PumpResponse] = None
+    tanque: Optional[TankResponse] = None
     registrado_por: Optional[UserResponse] = None
 
     class Config:

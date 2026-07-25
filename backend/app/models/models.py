@@ -56,12 +56,13 @@ class Tank(Base):
     codigo = Column(String(20), unique=True, index=True, nullable=False)  # TK3, TK4, TK5
     producto_id = Column(Integer, ForeignKey("products.id"), nullable=True)
     capacidad_m3 = Column(Float, nullable=True, default=1000.0)
-    estado = Column(String(30), default="Disponible")  # Disponible, En Uso, Mantenimiento
+    estado = Column(String(50), default="Operativo")  # Operativo, Mantenimiento, Inactivo
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     producto = relationship("Product", back_populates="tanks")
     operations = relationship("Operation", secondary=operation_tanks, back_populates="tanks")
+    measurements = relationship("Measurement", back_populates="tanque")
 
 class Pump(Base):
     __tablename__ = "pumps"
@@ -159,6 +160,7 @@ class Measurement(Base):
     id = Column(Integer, primary_key=True, index=True)
     operation_id = Column(Integer, ForeignKey("operations.id"), nullable=False)
     bomba_id = Column(Integer, ForeignKey("pumps.id"), nullable=False)
+    tanque_id = Column(Integer, ForeignKey("tanks.id"), nullable=True) # Nullable para mantener compatibilidad
     inspection_id = Column(Integer, ForeignKey("scheduled_inspections.id"), nullable=True)
     presion_succion_inhg = Column(Float, nullable=False)
     presion_descarga_psi = Column(Float, nullable=False)
@@ -177,6 +179,7 @@ class Measurement(Base):
     # Relationships
     operation = relationship("Operation", back_populates="measurements")
     bomba = relationship("Pump", back_populates="measurements")
+    tanque = relationship("Tank", back_populates="measurements")
     scheduled_inspection = relationship("ScheduledInspection", back_populates="measurements")
     registrado_por = relationship("User", back_populates="measurements")
     alarm_events = relationship("AlarmEvent", back_populates="measurement")

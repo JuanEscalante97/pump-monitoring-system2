@@ -207,14 +207,14 @@ export const History: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Fecha y Hora</TableCell>
+                <TableCell>FECHA Y HORA</TableCell>
                 <TableCell>Bomba</TableCell>
+                <TableCell>Tanque</TableCell>
                 <TableCell>P. Succión</TableCell>
                 <TableCell>P. Descarga</TableCell>
                 <TableCell>Temperatura</TableCell>
                 <TableCell>Corriente</TableCell>
                 <TableCell>Estado / Auditoría</TableCell>
-                <TableCell>Técnico Mecánico</TableCell>
                 <TableCell align="right">Acción</TableCell>
               </TableRow>
             </TableHead>
@@ -222,9 +222,10 @@ export const History: React.FC = () => {
               {measurements.map((m) => (
                 <TableRow key={m.id}>
                   <TableCell sx={{ fontWeight: 700 }}>
-                    {m.fecha_registro} {m.hora_registro}
+                    {m.fecha_registro.split('-').reverse().join('/')} {m.hora_registro.substring(0, 5)}
                   </TableCell>
                   <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>{m.bomba?.codigo}</TableCell>
+                  <TableCell>{m.tanque?.codigo || '-'}</TableCell>
                   <TableCell>{m.presion_succion_inhg} inHg</TableCell>
                   <TableCell>{m.presion_descarga_psi} psi</TableCell>
                   <TableCell sx={{ color: m.temperatura_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
@@ -240,7 +241,6 @@ export const History: React.FC = () => {
                       <Chip label="ORIGINAL" color="success" size="small" sx={{ fontWeight: 700 }} />
                     )}
                   </TableCell>
-                  <TableCell>{m.tecnico_mecanico || m.registrado_por?.full_name}</TableCell>
                   <TableCell align="right" sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                     <Button
                       variant="outlined"

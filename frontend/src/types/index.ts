@@ -77,6 +77,7 @@ export interface Measurement {
   id: number;
   operation_id: number;
   bomba_id: number;
+  tanque_id?: number;
   inspection_id?: number;
   presion_succion_inhg: number;
   presion_descarga_psi: number;
@@ -91,6 +92,7 @@ export interface Measurement {
   is_corrected: boolean;
   corregido_motivo?: string;
   bomba?: Pump;
+  tanque?: Tank;
   registrado_por?: User;
 }
 

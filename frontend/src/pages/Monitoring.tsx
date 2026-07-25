@@ -138,15 +138,14 @@ export const Monitoring: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Estampa Servidor (Hora)</TableCell>
+                    <TableCell>FECHA Y HORA</TableCell>
                     <TableCell>Bomba</TableCell>
+                    <TableCell>Tanque</TableCell>
                     <TableCell>P. Succión (inHg)</TableCell>
                     <TableCell>P. Descarga (psi)</TableCell>
                     <TableCell>Temp. Motor (°C)</TableCell>
                     <TableCell>Corriente (A)</TableCell>
                     <TableCell>Estado Alarma</TableCell>
-                    <TableCell>Técnico Mecánico</TableCell>
-                    <TableCell>Registrado Por</TableCell>
                     <TableCell>Observaciones</TableCell>
                   </TableRow>
                 </TableHead>
@@ -156,11 +155,12 @@ export const Monitoring: React.FC = () => {
                     return (
                       <TableRow key={m.id}>
                         <TableCell sx={{ fontWeight: 700, color: '#f8fafc' }}>
-                          {m.fecha_registro} {m.hora_registro}
+                          {m.fecha_registro.split('-').reverse().join('/')} {m.hora_registro.substring(0, 5)}
                         </TableCell>
                         <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>
-                          {m.bomba?.codigo} ({m.bomba?.nombre})
+                          {m.bomba?.codigo}
                         </TableCell>
+                        <TableCell>{m.tanque?.codigo || '-'}</TableCell>
                         <TableCell>{m.presion_succion_inhg}</TableCell>
                         <TableCell>{m.presion_descarga_psi}</TableCell>
                         <TableCell sx={{ color: m.temperatura_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
@@ -177,8 +177,6 @@ export const Monitoring: React.FC = () => {
                             sx={{ fontWeight: 700 }}
                           />
                         </TableCell>
-                        <TableCell>{m.tecnico_mecanico || '-'}</TableCell>
-                        <TableCell>{m.registrado_por?.full_name}</TableCell>
                         <TableCell>{m.observaciones || '-'}</TableCell>
                       </TableRow>
                     );

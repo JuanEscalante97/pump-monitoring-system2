@@ -56,6 +56,7 @@ def create_measurement(
     measurement = Measurement(
         operation_id=operation.id,
         bomba_id=m_in.bomba_id,
+        tanque_id=m_in.tanque_id,
         inspection_id=inspection.id if inspection else None,
         presion_succion_inhg=m_in.presion_succion_inhg,
         presion_descarga_psi=m_in.presion_descarga_psi,

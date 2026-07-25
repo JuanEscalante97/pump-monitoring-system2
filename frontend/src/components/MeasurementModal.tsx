@@ -16,7 +16,7 @@ import {
 
 import { Activity, Clock, ShieldAlert, Check } from 'lucide-react';
 import { api } from '../api/client';
-import { Pump } from '../types';
+import { Pump, Tank } from '../types';
 
 interface MeasurementModalProps {
   open: boolean;
@@ -34,12 +34,13 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
   onSuccess,
 }) => {
   const [pumps, setPumps] = useState<Pump[]>([]);
+  const [tanks, setTanks] = useState<Tank[]>([]);
   const [bombaId, setBombaId] = useState<number>(selectedPumpId || 0);
+  const [tanqueId, setTanqueId] = useState<number | ''>('');
   const [presionSuccion, setPresionSuccion] = useState<string>('4.5');
   const [presionDescarga, setPresionDescarga] = useState<string>('85.0');
   const [temperatura, setTemperatura] = useState<string>('68.0');
   const [corriente, setCorriente] = useState<string>('36.0');
-  const [tecnicoMecanico, setTecnicoMecanico] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>('');
 
   const [loading, setLoading] = useState(false);
@@ -48,17 +49,21 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
   const [alarmWarning, setAlarmWarning] = useState<string | null>(null);
 
   React.useEffect(() => {
-    const fetchPumps = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get('/pumps');
-        setPumps(res.data);
+        const [pRes, tRes] = await Promise.all([
+          api.get('/pumps'),
+          api.get('/tanks')
+        ]);
+        setPumps(pRes.data);
+        setTanks(tRes.data);
         if (selectedPumpId) setBombaId(selectedPumpId);
-        else if (res.data.length > 0 && !bombaId) setBombaId(res.data[0].id);
+        else if (pRes.data.length > 0 && !bombaId) setBombaId(pRes.data[0].id);
       } catch (err) {
-        console.error('Error fetching pumps', err);
+        console.error('Error fetching data', err);
       }
     };
-    if (open) fetchPumps();
+    if (open) fetchData();
   }, [open, selectedPumpId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,11 +77,11 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
       const payload = {
         operation_id: operationId,
         bomba_id: Number(bombaId),
+        tanque_id: tanqueId === '' ? null : Number(tanqueId),
         presion_succion_inhg: parseFloat(presionSuccion),
         presion_descarga_psi: parseFloat(presionDescarga),
         temperatura_c: parseFloat(temperatura),
         corriente_a: parseFloat(corriente),
-        tecnico_mecanico: tecnicoMecanico,
         observaciones,
       };
 
@@ -132,32 +137,37 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
           </Paper>
 
           <Grid container spacing={2}>
-            {/* Técnico Mecánico */}
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Nombre del Técnico Mecánico"
-                value={tecnicoMecanico}
-                onChange={(e) => setTecnicoMecanico(e.target.value)}
-                required
-                sx={{ mb: 1 }}
-              />
-            </Grid>
-            {/* Pump Selection */}
-            <Grid item xs={12}>
+            {/* Tank Selection */}
+            <Grid item xs={12} sm={6}>
               <TextField
                 select
                 fullWidth
-                label="Bomba Asignada a la Operación"
-                value={bombaId}
-                onChange={(e) => setBombaId(Number(e.target.value))}
+                label="Tanque Asociado (Opcional)"
+                value={tanqueId}
+                onChange={(e) => setTanqueId(e.target.value === '' ? '' : Number(e.target.value))}
                 SelectProps={{ native: true }}
                 sx={{ mb: 1 }}
               >
+                <option value="">Seleccione un tanque...</option>
+                {tanks.map((t) => (
+                  <option key={t.id} value={t.id}>{t.codigo}</option>
+                ))}
+              </TextField>
+            </Grid>
+            {/* Pump Selection */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                select
+                fullWidth
+                label="Bomba Inspeccionada"
+                value={bombaId}
+                onChange={(e) => setBombaId(Number(e.target.value))}
+                SelectProps={{ native: true }}
+                required
+                sx={{ mb: 1 }}
+              >
                 {pumps.map((p) => (
-                  <option key={p.id} value={p.id} style={{ background: '#1e293b', color: '#fff' }}>
-                    {p.codigo} - {p.nombre} ({p.marca} {p.modelo})
-                  </option>
+                  <option key={p.id} value={p.id}>{p.codigo} - {p.nombre}</option>
                 ))}
               </TextField>
             </Grid>
