@@ -260,14 +260,14 @@ export const History: React.FC = () => {
                     />
                   </TableCell>
                 )}
-                <TableCell>FECHA Y HORA</TableCell>
+                <TableCell>Fecha y Hora</TableCell>
                 <TableCell>Bomba</TableCell>
                 <TableCell>Tanque</TableCell>
                 <TableCell>P. Succión</TableCell>
                 <TableCell>P. Descarga</TableCell>
                 <TableCell>Temperatura</TableCell>
                 <TableCell>Corriente</TableCell>
-                <TableCell>Estado / Auditoría</TableCell>
+                <TableCell>Estado</TableCell>
                 <TableCell align="right">Acción</TableCell>
               </TableRow>
             </TableHead>
