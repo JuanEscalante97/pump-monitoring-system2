@@ -37,30 +37,12 @@ def build_operation_response(db: Session, op: Operation) -> OperationResponse:
     op_resp.pumps = [PumpResponse.model_validate(p) for p in all_pumps]
     return op_resp
 
-def check_and_clean_test_op(db: Session):
-    """Limpia automáticamente operaciones de prueba pegadas (como OP-001) en tiempo real al consultar."""
-    try:
-        from app.models.models import AlarmEvent
-        stucked_ops = db.query(Operation).filter(
-            (Operation.estado == "Activa") & (Operation.codigo_operacion == "OP-001")
-        ).all()
-        for test_op in stucked_ops:
-            db.query(Measurement).filter(Measurement.operation_id == test_op.id).delete(synchronize_session=False)
-            db.query(AlarmEvent).filter(AlarmEvent.operacion_id == test_op.id).delete(synchronize_session=False)
-            db.query(ScheduledInspection).filter(ScheduledInspection.operation_id == test_op.id).delete(synchronize_session=False)
-            db.delete(test_op)
-        if stucked_ops:
-            db.commit()
-    except Exception:
-        db.rollback()
-
 @router.get("", response_model=List[OperationResponse])
 def list_operations(
     estado: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    check_and_clean_test_op(db)
     query = db.query(Operation)
     if estado:
         query = query.filter(Operation.estado == estado)
@@ -81,7 +63,6 @@ def get_active_operation(
     current_user: User = Depends(get_current_user)
 ):
     """Retorna la operación actualmente activa (si existe)."""
-    check_and_clean_test_op(db)
     op = db.query(Operation).filter(Operation.estado == "Activa").order_by(Operation.created_at.desc()).first()
     if not op:
         return None
@@ -94,25 +75,18 @@ def create_operation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Al iniciar una nueva operación, eliminamos operaciones previas activas si son de prueba (OP-001) o finalizamos si eran reales, sin bloquear al usuario
+    # Al iniciar una nueva operación, finalizamos limpiamente operaciones anteriores para no tener más de 1 activa sin bloquear al usuario
     active_ops = db.query(Operation).filter(Operation.estado == "Activa").all()
-    from app.models.models import AlarmEvent
     for act_op in active_ops:
-        med_count = db.query(Measurement).filter(Measurement.operation_id == act_op.id).count()
-        if act_op.codigo_operacion == "OP-001" or med_count == 0:
-            db.query(Measurement).filter(Measurement.operation_id == act_op.id).delete(synchronize_session=False)
-            db.query(AlarmEvent).filter(AlarmEvent.operacion_id == act_op.id).delete(synchronize_session=False)
-            db.query(ScheduledInspection).filter(ScheduledInspection.operation_id == act_op.id).delete(synchronize_session=False)
-            db.delete(act_op)
-        else:
-            act_op.estado = "Finalizada"
-            act_op.hora_fin = datetime.now().time()
-            for p in act_op.pumps:
-                p.estado = "Operativa"
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
+        act_op.estado = "Finalizada"
+        act_op.hora_fin = datetime.now().time()
+        for p in act_op.pumps:
+            p.estado = "Operativa"
+    if active_ops:
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
 
     # Validations for tanks/pumps removed to allow flexible operations
     # Validate entities exist
@@ -166,7 +140,7 @@ def create_operation(
         get_client_ip(request), f"Operación iniciada: {codigo_op} con {len(pumps)} bombas y {len(tanks)} tanques"
     )
 
-    return operation
+    return build_operation_response(db, operation)
 
 @router.put("/{operation_id}/finish", response_model=OperationResponse)
 def finish_operation(
@@ -197,7 +171,7 @@ def finish_operation(
         get_client_ip(request), f"Operación finalizada: {operation.codigo_operacion} a las {now_time}"
     )
 
-    return operation
+    return build_operation_response(db, operation)
 
 @router.delete("/{operation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_operation(

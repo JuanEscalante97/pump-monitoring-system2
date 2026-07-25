@@ -11,7 +11,6 @@ from app.schemas.schemas import (
 )
 
 from app.core.security import get_current_user
-from app.api.operations import check_and_clean_test_op
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard & Analítica"])
 
@@ -20,7 +19,6 @@ def get_dashboard_kpis(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    check_and_clean_test_op(db)
     tz_peru = timezone(timedelta(hours=-5))
     today = datetime.now(tz_peru).date()
 
@@ -73,7 +71,6 @@ def get_pid_diagram_data(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    check_and_clean_test_op(db)
     active_op = db.query(Operation).filter(Operation.estado == "Activa").first()
     
     if active_op:
