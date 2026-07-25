@@ -17,15 +17,15 @@ import {
 } from '@mui/material';
 import { Save, AlertTriangle, CheckCircle2, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
-import { AlarmEvent, AlarmThreshold } from '../types';
+import { AlarmEvent, AlarmThreshold, Pump } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 export const Alarms: React.FC = () => {
   const { user } = useAuth();
   const [events, setEvents] = useState<AlarmEvent[]>([]);
-  const [threshold, setThreshold] = useState<AlarmThreshold | null>(null);
-
-  // Threshold form state
+  const [thresholds, setThresholds] = useState<AlarmThreshold[]>([]);
+  const [pumps, setPumps] = useState<Pump[]>([]);
+  const [selectedPumpId, setSelectedPumpId] = useState<number | ''>('');
   const [tempMax, setTempMax] = useState('80.0');
   const [currMax, setCurrMax] = useState('45.0');
   const [pSucMin, setPSucMin] = useState('-10.0');
@@ -38,30 +38,57 @@ export const Alarms: React.FC = () => {
 
   const loadAlarmsData = async () => {
     try {
-      const [evRes, thRes] = await Promise.all([
+      const [evRes, thRes, pRes] = await Promise.all([
         api.get('/alarms/events'),
         api.get('/alarms/thresholds'),
+        api.get('/pumps'),
       ]);
 
       setEvents(evRes.data);
-      if (thRes.data && thRes.data.length > 0) {
-        const th: AlarmThreshold = thRes.data[0];
-        setThreshold(th);
-        setTempMax(String(th.temp_max_c));
-        setCurrMax(String(th.corriente_max_a));
-        setPSucMin(String(th.presion_suc_min_inhg));
-        setPSucMax(String(th.presion_suc_max_inhg));
-        setPDescMin(String(th.presion_desc_min_psi));
-        setPDescMax(String(th.presion_desc_max_psi));
-      }
+      setThresholds(thRes.data);
+      setPumps(pRes.data);
+
+      applyThresholdToForm(thRes.data, selectedPumpId);
     } catch (err) {
       console.error('Error al cargar alarmas:', err);
+    }
+  };
+
+  const applyThresholdToForm = (allThresholds: AlarmThreshold[], pumpId: number | '') => {
+    const th = allThresholds.find(t => (pumpId === '' ? t.bomba_id === null : t.bomba_id === pumpId));
+    if (th) {
+      setTempMax(String(th.temp_max_c));
+      setCurrMax(String(th.corriente_max_a));
+      setPSucMin(String(th.presion_suc_min_inhg));
+      setPSucMax(String(th.presion_suc_max_inhg));
+      setPDescMin(String(th.presion_desc_min_psi));
+      setPDescMax(String(th.presion_desc_max_psi));
+    } else if (pumpId !== '') {
+      // If no specific threshold for pump, load global fallback
+      const globalTh = allThresholds.find(t => t.bomba_id === null);
+      if (globalTh) {
+        setTempMax(String(globalTh.temp_max_c));
+        setCurrMax(String(globalTh.corriente_max_a));
+        setPSucMin(String(globalTh.presion_suc_min_inhg));
+        setPSucMax(String(globalTh.presion_suc_max_inhg));
+        setPDescMin(String(globalTh.presion_desc_min_psi));
+        setPDescMax(String(globalTh.presion_desc_max_psi));
+      } else {
+        // Fallbacks
+        setTempMax('80.0'); setCurrMax('45.0');
+        setPSucMin('-10.0'); setPSucMax('30.0');
+        setPDescMin('20.0'); setPDescMax('150.0');
+      }
     }
   };
 
   useEffect(() => {
     loadAlarmsData();
   }, []);
+
+  useEffect(() => {
+    applyThresholdToForm(thresholds, selectedPumpId);
+  }, [selectedPumpId]);
 
   const handleSaveThresholds = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +97,7 @@ export const Alarms: React.FC = () => {
 
     try {
       await api.post('/alarms/thresholds', {
-        bomba_id: null,
+        bomba_id: selectedPumpId === '' ? null : selectedPumpId,
         temp_max_c: parseFloat(tempMax),
         corriente_max_a: parseFloat(currMax),
         presion_suc_min_inhg: parseFloat(pSucMin),
@@ -124,9 +151,24 @@ export const Alarms: React.FC = () => {
 
       {/* Threshold Configuration Panel */}
       <Paper sx={{ p: 3, mb: 4, backgroundColor: '#0f172a', borderRadius: 3, borderLeft: '4px solid #ef4444' }}>
-        <Typography variant="h6" sx={{ color: '#f8fafc', fontWeight: 700, mb: 2 }}>
-          Límites Editables de Alarma (Globales)
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6" sx={{ color: '#f8fafc', fontWeight: 700 }}>
+            Límites Editables de Alarma
+          </Typography>
+          <TextField
+            select
+            size="small"
+            value={selectedPumpId}
+            onChange={(e) => setSelectedPumpId(e.target.value === '' ? '' : Number(e.target.value))}
+            SelectProps={{ native: true }}
+            sx={{ minWidth: 250, backgroundColor: '#1e293b', borderRadius: 1 }}
+          >
+            <option value="">Límites Globales (Por defecto)</option>
+            {pumps.map(p => (
+              <option key={p.id} value={p.id}>Específico: {p.codigo} - {p.nombre}</option>
+            ))}
+          </TextField>
+        </Box>
 
         {saveSuccess && <Alert severity="success" sx={{ mb: 2 }}>Umbrales de seguridad actualizados exitosamente.</Alert>}
 
