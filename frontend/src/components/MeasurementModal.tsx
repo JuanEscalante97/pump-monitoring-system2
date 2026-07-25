@@ -146,7 +146,6 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
                 value={tanqueId}
                 onChange={(e) => setTanqueId(e.target.value === '' ? '' : Number(e.target.value))}
                 SelectProps={{ native: true }}
-                sx={{ mb: 1 }}
               >
                 <option value="">Seleccione un tanque...</option>
                 {tanks.map((t) => (
@@ -164,7 +163,6 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
                 onChange={(e) => setBombaId(Number(e.target.value))}
                 SelectProps={{ native: true }}
                 required
-                sx={{ mb: 1 }}
               >
                 {pumps.map((p) => (
                   <option key={p.id} value={p.id}>{p.codigo} - {p.nombre}</option>

@@ -135,13 +135,10 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
           </Typography>
           <Grid container spacing={2}>
             {(data.pumps_status || []).map(({ pump, last_measurement, status_indicator, active_alarms_count }) => {
-              const isAssigned = activeOp?.pumps?.some((p) => p.id === pump.id);
-
-
               let statusBg = 'rgba(16, 185, 129, 0.1)';
               let statusBorder = '#10b981';
               let statusIcon = <CheckCircle2 size={18} color="#10b981" />;
-              let statusText = '🟢 NORMAL';
+              let statusText = '🟢 EN OPERACIÓN';
 
               if (status_indicator === 'ALARM') {
                 statusBg = 'rgba(239, 68, 68, 0.2)';
@@ -158,16 +155,16 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
               return (
                 <Grid item xs={12} key={pump.id}>
                   <Paper
-                    onClick={() => isAssigned && onSelectPump(pump.id)}
+                    onClick={() => onSelectPump(pump.id)}
                     sx={{
                       p: 2,
                       backgroundColor: statusBg,
-                      border: `2px solid ${isAssigned ? statusBorder : '#334155'}`,
+                      border: `2px solid ${statusBorder}`,
                       borderRadius: 2.5,
-                      cursor: isAssigned ? 'pointer' : 'default',
+                      cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      '&:hover': isAssigned ? { transform: 'translateY(-2px)', boxShadow: `0 4px 15px ${statusBorder}44` } : {},
-                      opacity: isAssigned ? 1 : 0.6,
+                      '&:hover': { transform: 'translateY(-2px)', boxShadow: `0 4px 15px ${statusBorder}44` },
+                      opacity: 1,
                     }}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
@@ -193,7 +190,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
                       </Box>
                       <Chip
                         icon={statusIcon}
-                        label={isAssigned ? statusText : 'INACTIVA'}
+                        label={statusText}
                         size="small"
                         sx={{
                           fontWeight: 700,

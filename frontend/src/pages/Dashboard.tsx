@@ -133,7 +133,7 @@ export const Dashboard: React.FC = () => {
               {kpis?.operaciones_activas || 0}
             </Typography>
             <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 600 }}>
-              {kpis?.bombas_trabajando || 0} Bombas en Operación
+              {kpis?.bombas_trabajando || 0} Bombas Reportadas
             </Typography>
           </Paper>
         </Grid>
@@ -177,12 +177,14 @@ export const Dashboard: React.FC = () => {
       </Box>
 
       {/* Historical Performance Charts */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" sx={{ color: '#f8fafc', fontWeight: 700, mb: 2, fontFamily: 'Chakra Petch' }}>
-          TENDENCIAS DE CONDICIÓN EN TIEMPO REAL
-        </Typography>
-        {chartData && <HistoryCharts data={chartData} />}
-      </Box>
+      {pidData?.active_operation && chartData && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h5" sx={{ color: '#f8fafc', fontWeight: 700, mb: 2, fontFamily: 'Chakra Petch' }}>
+            TENDENCIAS DE CONDICIÓN EN TIEMPO REAL
+          </Typography>
+          <HistoryCharts data={chartData} />
+        </Box>
+      )}
 
       {/* Measurement Modal */}
       {pidData?.active_operation && (

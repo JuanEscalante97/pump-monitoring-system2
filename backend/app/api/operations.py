@@ -62,7 +62,11 @@ def create_operation(
 
     tz_peru = timezone(timedelta(hours=-5))
     now_dt = datetime.now(tz_peru).replace(tzinfo=None)
-    codigo_op = f"OP-{now_dt.strftime('%Y%m%d')}-{now_dt.strftime('%H%M%S')}"
+    today = now_dt.date()
+    
+    # Generate short OP Code based on day and count
+    count_today = db.query(Operation).filter(Operation.fecha == today).count() + 1
+    codigo_op = f"OP-{now_dt.strftime('%d%m')}-{count_today:02d}"
 
     operation = Operation(
         codigo_operacion=codigo_op,

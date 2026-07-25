@@ -124,13 +124,13 @@ export const Operations: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 4, gap: 2 }}>
         <Box>
-          <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700 }}>
+          <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
             GESTIÓN DE OPERACIONES DE BOMBEO
           </Typography>
-          <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-            Inicie la operación antes de registrar mediciones y programe inspecciones automáticas por hora.
+          <Typography variant="body2" sx={{ color: '#94a3b8', mt: 0.5 }}>
+            Inicie la operación antes de registrar mediciones.
           </Typography>
         </Box>
 
@@ -142,6 +142,7 @@ export const Operations: React.FC = () => {
             setDialogOpen(true);
           }}
           disabled={!!activeOp}
+          sx={{ width: { xs: '100%', sm: 'auto' }, py: { xs: 1.5, sm: 1 } }}
         >
           Nueva Operación
         </Button>
@@ -180,9 +181,9 @@ export const Operations: React.FC = () => {
                   <TableCell>{op.fecha}</TableCell>
                   <TableCell>{op.buque?.nombre}</TableCell>
                   <TableCell>{op.producto?.nombre}</TableCell>
-                  <TableCell>{op.tanks.map((t) => t.codigo).join(', ')}</TableCell>
-                  <TableCell>{op.pumps.map((p) => p.codigo).join(', ')}</TableCell>
-                  <TableCell>{op.hora_inicio} - {op.hora_fin || 'En Proceso'}</TableCell>
+                  <TableCell>{op.tanks.map((t) => t.codigo).join(', ') || '-'}</TableCell>
+                  <TableCell>{op.pumps.map((p) => p.codigo).join(', ') || '-'}</TableCell>
+                  <TableCell>{op.hora_inicio.substring(0, 5)} - {op.hora_fin ? op.hora_fin.substring(0, 5) : 'En Proceso'}</TableCell>
                   <TableCell>
                     <Chip
                       label={op.estado}
