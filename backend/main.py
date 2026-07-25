@@ -78,6 +78,28 @@ def startup_db():
     except Exception as e:
         logger.error(f"Error limpiando huérfanos: {e}")
 
+    # Limpieza única programada: Eliminar operación activa (OP-001 o abiertas en pruebas) una única vez
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("CREATE TABLE IF NOT EXISTS system_patches (patch_id VARCHAR(50) PRIMARY KEY, executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"))
+            res = conn.execute(text("SELECT patch_id FROM system_patches WHERE patch_id = 'cleanup_op_001_v1'")).fetchone()
+            if not res:
+                logger.info("Ejecutando limpieza única de operación abierta OP-001 y operaciones activas pegadas...")
+                conn.execute(text("DELETE FROM scheduled_inspections WHERE operation_id IN (SELECT id FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001')"))
+                conn.execute(text("DELETE FROM alarm_events WHERE operacion_id IN (SELECT id FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001')"))
+                conn.execute(text("DELETE FROM measurements WHERE operation_id IN (SELECT id FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001')"))
+                try:
+                    conn.execute(text("DELETE FROM operation_tanks WHERE operation_id IN (SELECT id FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001')"))
+                    conn.execute(text("DELETE FROM operation_pumps WHERE operation_id IN (SELECT id FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001')"))
+                except Exception:
+                    pass
+                conn.execute(text("DELETE FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001'"))
+                conn.execute(text("INSERT INTO system_patches (patch_id) VALUES ('cleanup_op_001_v1')"))
+                conn.commit()
+                logger.info("Limpieza única completada con éxito. Operación abierta eliminada.")
+    except Exception as e:
+        logger.error(f"Error en limpieza de operación abierta: {e}")
+
     logger.info("Tablas creadas/verificadas exitosamente.")
 
 # Register APIRouters
