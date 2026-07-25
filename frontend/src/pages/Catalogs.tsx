@@ -387,7 +387,7 @@ export const Catalogs: React.FC = () => {
                   <Grid item xs={6}><TextField fullWidth required label="TAG / Código Tanque (OBLIGATORIO - Ej. TK3)" value={formData.codigo || ''} onChange={(e) => setFormData({ ...formData, codigo: e.target.value })} /></Grid>
                   <Grid item xs={6}><TextField fullWidth type="number" label="Capacidad m³ (Opcional)" value={formData.capacidad_m3 || ''} onChange={(e) => setFormData({ ...formData, capacidad_m3: e.target.value ? parseFloat(e.target.value) : 1000 })} /></Grid>
                   <Grid item xs={12}>
-                    <TextField select fullWidth label="Producto Asignado (Opcional)" value={formData.producto_id || ''} onChange={(e) => setFormData({ ...formData, producto_id: e.target.value ? Number(e.target.value) : null })} SelectProps={{ native: true }}>
+                    <TextField select fullWidth label="Producto Asignado (Opcional)" InputLabelProps={{ shrink: true }} value={formData.producto_id || ''} onChange={(e) => setFormData({ ...formData, producto_id: e.target.value ? Number(e.target.value) : null })} SelectProps={{ native: true }}>
                       <option value="">Seleccionar Producto (Opcional)...</option>
                       {products.map((p) => <option key={p.id} value={p.id} style={{ background: '#1e293b' }}>{p.nombre}</option>)}
                     </TextField>

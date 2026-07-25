@@ -98,8 +98,6 @@ def get_pid_diagram_data(
 
         if active_alarms_count > 0:
             status_ind = "ALARM"
-        elif last_m and (last_m.temperatura_c > 75.0 or last_m.corriente_a > 40.0):
-            status_ind = "WARNING"
 
         pumps_status.append(PumpLatestStatus(
             pump=PumpResponse.model_validate(p),

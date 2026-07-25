@@ -154,6 +154,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
                 select
                 fullWidth
                 label="Tanque Asociado (Opcional)"
+                InputLabelProps={{ shrink: true }}
                 value={tanqueId}
                 onChange={(e) => setTanqueId(e.target.value === '' ? '' : Number(e.target.value))}
                 SelectProps={{ native: true }}
@@ -170,6 +171,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
                 select
                 fullWidth
                 label="Bomba Inspeccionada"
+                InputLabelProps={{ shrink: true }}
                 value={bombaId}
                 onChange={(e) => setBombaId(Number(e.target.value))}
                 SelectProps={{ native: true }}

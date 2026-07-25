@@ -4,8 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.models.models import Operation, Tank, Pump, Vessel, Product, User, ScheduledInspection
-from app.schemas.schemas import OperationCreate, OperationResponse
-from app.schemas.schemas import OperationCreate, OperationResponse
+from app.schemas.schemas import OperationCreate, OperationResponse, TankResponse, PumpResponse
 from app.core.security import get_current_user
 from app.core.audit import log_audit_action, get_client_ip
 from datetime import timedelta, timezone
@@ -31,12 +30,19 @@ def list_operations(
         dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
         dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
         
-        # Pydantic v2 model_dump returns dict, we need to overwrite tanks/pumps lists
-        op_dict["tanks"] = dynamic_tanks
-        op_dict["pumps"] = dynamic_pumps
+        op_dict["tanks"] = [TankResponse.model_validate(t).model_dump() for t in dynamic_tanks]
+        op_dict["pumps"] = [PumpResponse.model_validate(p).model_dump() for p in dynamic_pumps]
         results.append(op_dict)
         
     return results
+
+@router.get("/migrate-codes")
+def migrate_op_codes(db: Session = Depends(get_db)):
+    operations = db.query(Operation).order_by(Operation.created_at.asc()).all()
+    for idx, op in enumerate(operations):
+        op.codigo_operacion = f"OP-{(idx + 1):03d}"
+    db.commit()
+    return {"message": f"Migrated {len(operations)} operations"}
 
 @router.get("/active", response_model=Optional[OperationResponse])
 def get_active_operation(
@@ -76,11 +82,10 @@ def create_operation(
 
     tz_peru = timezone(timedelta(hours=-5))
     now_dt = datetime.now(tz_peru).replace(tzinfo=None)
-    today = now_dt.date()
     
-    # Generate short OP Code based on day and count
-    count_today = db.query(Operation).filter(Operation.fecha == today).count() + 1
-    codigo_op = f"OP-{now_dt.strftime('%d%m')}-{count_today:02d}"
+    # Generate global short OP Code
+    count_total = db.query(Operation).count() + 1
+    codigo_op = f"OP-{count_total:03d}"
 
     operation = Operation(
         codigo_operacion=codigo_op,
