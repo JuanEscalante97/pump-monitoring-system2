@@ -40,16 +40,17 @@ export const Dashboard: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       setErrorMsg(null);
+      const ts = Date.now();
       const [kpiRes, pidRes] = await Promise.all([
-        api.get('/dashboard/kpis'),
-        api.get('/dashboard/pid-diagram'),
+        api.get(`/dashboard/kpis?_=${ts}`),
+        api.get(`/dashboard/pid-diagram?_=${ts}`),
       ]);
 
       setKpis(kpiRes.data);
       setPidData(pidRes.data);
 
       if (pidRes.data.active_operation) {
-        const chartRes = await api.get(`/dashboard/charts?operation_id=${pidRes.data.active_operation.id}`);
+        const chartRes = await api.get(`/dashboard/charts?operation_id=${pidRes.data.active_operation.id}&_=${ts}`);
         setChartData(chartRes.data);
       } else {
         setChartData(null);
