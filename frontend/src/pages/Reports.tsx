@@ -34,7 +34,9 @@ export const Reports: React.FC = () => {
 
   const loadOperations = () => {
     api.get('/operations').then((res) => {
-      setOperations(res.data);
+      // Filtrar únicamente las operaciones finalizadas para la emisión de reportes técnicos
+      const finalizadas = res.data.filter((op: Operation) => op.estado === 'Finalizada');
+      setOperations(finalizadas);
       setSelectedIds([]);
     });
     api.get('/vessels').then(res => setVessels(res.data));
@@ -112,7 +114,7 @@ export const Reports: React.FC = () => {
             CENTRO DE EMISIÓN DE REPORTES TÉCNICOS
           </Typography>
           <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-            Exporte informes consolidados en formato PDF institucional o libro de cálculo Excel para análisis de mantenimiento.
+            Exporte informes consolidados en PDF institucional o Excel. Los reportes técnicos se generan y habilitan automáticamente al finalizar cada operación.
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>

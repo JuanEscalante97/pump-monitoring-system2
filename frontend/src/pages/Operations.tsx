@@ -20,7 +20,7 @@ import {
   Checkbox,
   TableContainer,
 } from '@mui/material';
-import { Plus, Square, Trash2 } from 'lucide-react';
+import { Plus, Square, Trash2, FileText, FileSpreadsheet } from 'lucide-react';
 import { api } from '../api/client';
 import { Operation, Vessel, Product } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -117,6 +117,29 @@ export const Operations: React.FC = () => {
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Error al eliminar la operación');
     }
+  };
+
+  const downloadFile = async (url: string, filename: string) => {
+    try {
+      const response = await api.get(url, { responseType: 'blob' });
+      const blob = new Blob([response.data]);
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      window.URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error('Error downloading file', error);
+      alert('No se pudo descargar el archivo. Verifique sus permisos o la sesión.');
+    }
+  };
+
+  const handleDownloadPDF = (opId: number, opCode: string) => {
+    downloadFile(`/reports/operation/${opId}/pdf`, `Reporte_${opCode}.pdf`);
+  };
+
+  const handleDownloadExcel = (opId: number, opCode: string) => {
+    downloadFile(`/reports/operation/${opId}/excel`, `Reporte_${opCode}.xlsx`);
   };
 
   const handleBulkDelete = async () => {
@@ -267,6 +290,28 @@ export const Operations: React.FC = () => {
                         >
                           Finalizar
                         </Button>
+                      )}
+                      {op.estado === 'Finalizada' && (
+                        <>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            size="small"
+                            startIcon={<FileText size={14} />}
+                            onClick={() => handleDownloadPDF(op.id, op.codigo_operacion)}
+                          >
+                            PDF
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="success"
+                            size="small"
+                            startIcon={<FileSpreadsheet size={14} />}
+                            onClick={() => handleDownloadExcel(op.id, op.codigo_operacion)}
+                          >
+                            Excel
+                          </Button>
+                        </>
                       )}
                       {(user?.role === 'Administrador' || op.estado === 'Activa') && (
                         <Button

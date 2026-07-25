@@ -78,30 +78,6 @@ def startup_db():
     except Exception as e:
         logger.error(f"Error limpiando huérfanos: {e}")
 
-    # Limpieza garantizada vía ORM de SQLAlchemy para evitar bloqueos de transacción en PostgreSQL (Render)
-    try:
-        from app.database.session import SessionLocal
-        from app.models.models import Operation, Measurement, AlarmEvent, ScheduledInspection
-        db = SessionLocal()
-        try:
-            # Eliminar cualquier operación abierta en estado "Activa" o que sea "OP-001" para liberar el sistema
-            stuck_ops = db.query(Operation).filter((Operation.estado == "Activa") | (Operation.codigo_operacion == "OP-001")).all()
-            for op in stuck_ops:
-                logger.info(f"Eliminando operación pegada: {op.codigo_operacion} (ID: {op.id})")
-                db.query(Measurement).filter(Measurement.operation_id == op.id).delete(synchronize_session=False)
-                db.query(AlarmEvent).filter(AlarmEvent.operacion_id == op.id).delete(synchronize_session=False)
-                db.query(ScheduledInspection).filter(ScheduledInspection.operation_id == op.id).delete(synchronize_session=False)
-                db.delete(op)
-            db.commit()
-            logger.info(f"Limpieza ORM completada con éxito: {len(stuck_ops)} operaciones abiertas eliminadas.")
-        except Exception as e_orm:
-            db.rollback()
-            logger.error(f"Error en limpieza ORM: {e_orm}")
-        finally:
-            db.close()
-    except Exception as e:
-        logger.error(f"Error en inicialización de sesión de limpieza: {e}")
-
     logger.info("Tablas creadas/verificadas exitosamente.")
 
 # Register APIRouters
