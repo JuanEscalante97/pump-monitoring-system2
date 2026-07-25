@@ -10,6 +10,7 @@ import {
   TableRow,
   Chip,
   Button,
+  TableContainer,
 } from '@mui/material';
 import { FileCheck, Shield, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
