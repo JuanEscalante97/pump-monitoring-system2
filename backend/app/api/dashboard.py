@@ -91,13 +91,17 @@ def get_pid_diagram_data(
 
         # Determine status indicator (🟢 NORMAL, 🟡 WARNING, 🔴 ALARM)
         status_ind = "NORMAL"
-        active_alarms_count = db.query(AlarmEvent).filter(
+        active_alarms = db.query(AlarmEvent).filter(
             AlarmEvent.bomba_id == p.id,
             AlarmEvent.estado == "Activa"
-        ).count()
+        ).all()
 
+        active_alarms_count = len(active_alarms)
         if active_alarms_count > 0:
-            status_ind = "ALARM"
+            if any(a.nivel == "ALARM" for a in active_alarms):
+                status_ind = "ALARM"
+            else:
+                status_ind = "WARNING"
 
         pumps_status.append(PumpLatestStatus(
             pump=PumpResponse.model_validate(p),

@@ -192,7 +192,7 @@ export const Operations: React.FC = () => {
 
       {activeOp && (
         <Alert severity="info" sx={{ mb: 3, backgroundColor: 'rgba(49, 130, 206, 0.15)', border: '1px solid #3182ce' }}>
-          <b>OPERACIÓN ACTIVA EN CURSO ({activeOp.codigo_operacion}):</b> Embarque de {activeOp.producto?.nombre} hacia buque <b>{activeOp.buque?.nombre}</b>. Bombas en operación: {activeOp.pumps.length > 0 ? activeOp.pumps.map(p => p.codigo).join(', ') : 'aún sin lecturas registradas'}.
+          <b>OPERACIÓN ACTIVA EN CURSO:</b> Embarque de {activeOp.producto?.nombre} hacia buque <b>{activeOp.buque?.nombre}</b>. Bombas en operación: {activeOp.pumps.length > 0 ? activeOp.pumps.map(p => p.codigo).join(', ') : 'aún sin lecturas registradas'}.
         </Alert>
       )}
 
@@ -240,7 +240,9 @@ export const Operations: React.FC = () => {
                         />
                       </TableCell>
                     )}
-                    <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>{op.codigo_operacion}</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>
+                      {op.codigo_operacion.length > 10 ? 'OP-' + op.codigo_operacion.slice(-3) : op.codigo_operacion}
+                    </TableCell>
                   <TableCell>{op.fecha}</TableCell>
                   <TableCell>{op.buque?.nombre}</TableCell>
                   <TableCell>{op.producto?.nombre}</TableCell>
@@ -303,11 +305,12 @@ export const Operations: React.FC = () => {
                   fullWidth
                   required
                   label="Buque Destino"
+                  InputLabelProps={{ shrink: true }}
                   value={selectedVessel}
                   onChange={(e) => setSelectedVessel(Number(e.target.value))}
                   SelectProps={{ native: true }}
                 >
-                  <option value="">Seleccionar Buque...</option>
+                  <option value="" disabled>Seleccionar Buque...</option>
                   {vessels.map((v) => (
                     <option key={v.id} value={v.id} style={{ background: '#1e293b' }}>{v.nombre} ({v.empresa})</option>
                   ))}
@@ -320,11 +323,12 @@ export const Operations: React.FC = () => {
                   fullWidth
                   required
                   label="Producto a Transferir"
+                  InputLabelProps={{ shrink: true }}
                   value={selectedProduct}
                   onChange={(e) => setSelectedProduct(Number(e.target.value))}
                   SelectProps={{ native: true }}
                 >
-                  <option value="">Seleccionar Producto...</option>
+                  <option value="" disabled>Seleccionar Producto...</option>
                   {products.map((p) => (
                     <option key={p.id} value={p.id} style={{ background: '#1e293b' }}>{p.nombre}</option>
                   ))}

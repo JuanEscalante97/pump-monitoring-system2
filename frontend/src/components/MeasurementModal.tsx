@@ -159,7 +159,8 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
                 onChange={(e) => setTanqueId(e.target.value === '' ? '' : Number(e.target.value))}
                 SelectProps={{ native: true }}
               >
-                <option value="">Seleccione un tanque...</option>
+                <option value="" disabled>Seleccione un tanque...</option>
+                <option value="">Ninguno</option>
                 {tanks.map((t) => (
                   <option key={t.id} value={t.id}>{t.codigo}</option>
                 ))}
@@ -172,13 +173,14 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
                 fullWidth
                 label="Bomba Inspeccionada"
                 InputLabelProps={{ shrink: true }}
-                value={bombaId}
+                value={bombaId === 0 ? '' : bombaId}
                 onChange={(e) => setBombaId(Number(e.target.value))}
                 SelectProps={{ native: true }}
                 required
               >
+                <option value="" disabled>Seleccione una bomba...</option>
                 {pumps.map((p) => (
-                  <option key={p.id} value={p.id}>{p.codigo} - {p.nombre}</option>
+                  <option key={p.id} value={p.id}>{p.codigo}{p.nombre ? ` - ${p.nombre}` : ''}</option>
                 ))}
               </TextField>
             </Grid>

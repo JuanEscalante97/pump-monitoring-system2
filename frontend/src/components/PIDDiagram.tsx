@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Paper, Typography, Chip, Button, Tooltip, Grid } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { Database as TankIcon, Gauge, Ship, ArrowRight, Activity, AlertTriangle, CheckCircle2, Zap } from 'lucide-react';
 import { PIDProcessData, PumpLatestStatus } from '../types';
 
@@ -9,6 +10,7 @@ interface PIDDiagramProps {
 }
 
 export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) => {
+  const navigate = useNavigate();
   if (!data) return null;
 
   const activeOp = data.active_operation;
@@ -155,7 +157,13 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
               return (
                 <Grid item xs={12} key={pump.id}>
                   <Paper
-                    onClick={() => onSelectPump(pump.id)}
+                    onClick={() => {
+                      if (status_indicator === 'ALARM' || status_indicator === 'WARNING') {
+                        navigate('/alarms');
+                      } else {
+                        onSelectPump(pump.id);
+                      }
+                    }}
                     sx={{
                       p: 2,
                       backgroundColor: statusBg,
