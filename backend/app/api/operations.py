@@ -79,7 +79,9 @@ def create_operation(
     active_ops = db.query(Operation).filter(Operation.estado == "Activa").all()
     for act_op in active_ops:
         act_op.estado = "Finalizada"
-        act_op.hora_fin = datetime.now().time()
+        now_val = datetime.now()
+        act_op.hora_fin = now_val.time()
+        act_op.fecha_fin = now_val.date()
         for p in act_op.pumps:
             p.estado = "Operativa"
     if active_ops:
@@ -155,8 +157,10 @@ def finish_operation(
     if operation.estado == "Finalizada":
         raise HTTPException(status_code=400, detail="La operación ya se encuentra finalizada")
 
-    now_time = datetime.now().time()
+    now_val = datetime.now()
+    now_time = now_val.time()
     operation.hora_fin = now_time
+    operation.fecha_fin = now_val.date()
     operation.estado = "Finalizada"
 
     # Reset pump states back to "Operativa"
@@ -184,8 +188,8 @@ def delete_operation(
     if not operation:
         raise HTTPException(status_code=404, detail="Operación no encontrada")
         
-    if current_user.role != "Administrador" and operation.estado != "Activa":
-        raise HTTPException(status_code=403, detail="Permisos insuficientes para eliminar operaciones finalizadas")
+    if current_user.role != "Administrador":
+        raise HTTPException(status_code=403, detail="Solo los Administradores pueden eliminar operaciones")
         
     codigo = operation.codigo_operacion
     

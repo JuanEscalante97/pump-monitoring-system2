@@ -63,6 +63,7 @@ export interface Operation {
   responsable_id: number;
   hora_inicio: string;
   hora_fin?: string;
+  fecha_fin?: string;
   estado: 'Activa' | 'Finalizada';
   observaciones?: string;
   buque?: Vessel;
@@ -79,7 +80,7 @@ export interface Measurement {
   bomba_id: number;
   tanque_id?: number;
   inspection_id?: number;
-  presion_succion_inhg: number;
+  presion_succion_inhg?: number | null;
   presion_descarga_psi: number;
   temperatura_c: number;
   corriente_a: number;

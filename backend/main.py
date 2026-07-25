@@ -56,6 +56,7 @@ def startup_db():
         ("measurements", "is_corrected", "BOOLEAN DEFAULT FALSE"),
         ("measurements", "corregido_motivo", "TEXT"),
         ("alarm_events", "measurement_id", "INTEGER REFERENCES measurements(id)"),
+        ("operations", "fecha_fin", "DATE"),
     ]
     
     for table, col, col_type in columns_to_check:
@@ -67,6 +68,15 @@ def startup_db():
                 conn.commit()
         except Exception as e:
             pass
+
+    # Hacer presion_succion_inhg opcional en PostgreSQL si tenía constraint NOT NULL
+    try:
+        with engine.connect() as conn:
+            if "sqlite" not in str(engine.url).lower():
+                conn.execute(text("ALTER TABLE measurements ALTER COLUMN presion_succion_inhg DROP NOT NULL"))
+                conn.commit()
+    except Exception:
+        pass
             
     # Limpiar registros huérfanos de manera independiente
     try:

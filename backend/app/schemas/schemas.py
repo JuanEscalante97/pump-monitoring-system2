@@ -154,6 +154,7 @@ class OperationResponse(BaseModel):
     responsable_id: int
     hora_inicio: time
     hora_fin: Optional[time] = None
+    fecha_fin: Optional[date] = None
     estado: str
     observaciones: Optional[str] = None
     created_at: datetime
@@ -172,7 +173,7 @@ class OperationResponse(BaseModel):
 class MeasurementBase(BaseModel):
     bomba_id: int
     tanque_id: Optional[int] = None
-    presion_succion_inhg: float
+    presion_succion_inhg: Optional[float] = None
     presion_descarga_psi: float
     temperatura_c: float
     corriente_a: float
@@ -183,7 +184,7 @@ class MeasurementCreate(MeasurementBase):
     operation_id: int
 
 class MeasurementCorrection(BaseModel):
-    presion_succion_inhg: float
+    presion_succion_inhg: Optional[float] = None
     presion_descarga_psi: float
     temperatura_c: float
     corriente_a: float

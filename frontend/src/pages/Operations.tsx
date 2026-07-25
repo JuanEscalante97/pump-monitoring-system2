@@ -19,8 +19,7 @@ import {
   DialogActions,
   Checkbox,
   TableContainer,
-} from '@mui/material';
-import { Plus, Square, Trash2, FileText, FileSpreadsheet } from 'lucide-react';
+import { Plus, Square, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
 import { Operation, Vessel, Product } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -117,29 +116,6 @@ export const Operations: React.FC = () => {
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Error al eliminar la operación');
     }
-  };
-
-  const downloadFile = async (url: string, filename: string) => {
-    try {
-      const response = await api.get(url, { responseType: 'blob' });
-      const blob = new Blob([response.data]);
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.download = filename;
-      link.click();
-      window.URL.revokeObjectURL(link.href);
-    } catch (error) {
-      console.error('Error downloading file', error);
-      alert('No se pudo descargar el archivo. Verifique sus permisos o la sesión.');
-    }
-  };
-
-  const handleDownloadPDF = (opId: number, opCode: string) => {
-    downloadFile(`/reports/operation/${opId}/pdf`, `Reporte_${opCode}.pdf`);
-  };
-
-  const handleDownloadExcel = (opId: number, opCode: string) => {
-    downloadFile(`/reports/operation/${opId}/excel`, `Reporte_${opCode}.xlsx`);
   };
 
   const handleBulkDelete = async () => {
@@ -239,11 +215,10 @@ export const Operations: React.FC = () => {
                   </TableCell>
                 )}
                 <TableCell>Código</TableCell>
-                <TableCell>Fecha</TableCell>
                 <TableCell>Buque</TableCell>
                 <TableCell>Producto</TableCell>
-                <TableCell>Observaciones</TableCell>
-                <TableCell>Hora Inicio / Fin</TableCell>
+                <TableCell>Fecha & Hora de Inicio</TableCell>
+                <TableCell>Fecha y Hora Fin</TableCell>
                 <TableCell>Estado</TableCell>
                 <TableCell align="right">Acciones</TableCell>
               </TableRow>
@@ -265,11 +240,10 @@ export const Operations: React.FC = () => {
                     <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>
                       {op.codigo_operacion.length > 10 ? 'OP-' + op.codigo_operacion.slice(-3) : op.codigo_operacion}
                     </TableCell>
-                  <TableCell>{op.fecha}</TableCell>
                   <TableCell>{op.buque?.nombre}</TableCell>
                   <TableCell>{op.producto?.nombre}</TableCell>
-                  <TableCell>{op.observaciones || '-'}</TableCell>
-                  <TableCell>{op.hora_inicio.substring(0, 5)} - {op.hora_fin ? op.hora_fin.substring(0, 5) : 'En Proceso'}</TableCell>
+                  <TableCell>{op.fecha} {op.hora_inicio.substring(0, 5)}</TableCell>
+                  <TableCell>{op.hora_fin ? `${op.fecha_fin || op.fecha} ${op.hora_fin.substring(0, 5)}` : 'En Proceso'}</TableCell>
                   <TableCell>
                     <Chip
                       label={op.estado}
@@ -291,29 +265,7 @@ export const Operations: React.FC = () => {
                           Finalizar
                         </Button>
                       )}
-                      {op.estado === 'Finalizada' && (
-                        <>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                            startIcon={<FileText size={14} />}
-                            onClick={() => handleDownloadPDF(op.id, op.codigo_operacion)}
-                          >
-                            PDF
-                          </Button>
-                          <Button
-                            variant="contained"
-                            color="success"
-                            size="small"
-                            startIcon={<FileSpreadsheet size={14} />}
-                            onClick={() => handleDownloadExcel(op.id, op.codigo_operacion)}
-                          >
-                            Excel
-                          </Button>
-                        </>
-                      )}
-                      {(user?.role === 'Administrador' || op.estado === 'Activa') && (
+                      {user?.role === 'Administrador' && (
                         <Button
                           variant="outlined"
                           color="error"

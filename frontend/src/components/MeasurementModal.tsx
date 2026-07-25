@@ -89,7 +89,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
         operation_id: operationId,
         bomba_id: Number(bombaId),
         tanque_id: tanqueId === '' ? null : Number(tanqueId),
-        presion_succion_inhg: parseFloat(presionSuccion),
+        presion_succion_inhg: presionSuccion.trim() === '' || isNaN(parseFloat(presionSuccion)) ? null : parseFloat(presionSuccion),
         presion_descarga_psi: parseFloat(presionDescarga),
         temperatura_c: parseFloat(temperatura),
         corriente_a: parseFloat(corriente),
@@ -180,7 +180,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
               >
                 <option value="" disabled>Seleccione una bomba...</option>
                 {pumps.map((p) => (
-                  <option key={p.id} value={p.id}>{p.codigo}{p.nombre ? ` - ${p.nombre}` : ''}</option>
+                  <option key={p.id} value={p.id}>{p.codigo}</option>
                 ))}
               </TextField>
             </Grid>
@@ -189,10 +189,9 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                required
                 type="number"
                 inputProps={{ step: '0.1' }}
-                label="Presión de Succión"
+                label="Presión de Succión (Opcional)"
                 value={presionSuccion}
                 onChange={(e) => setPresionSuccion(e.target.value)}
                 InputProps={{

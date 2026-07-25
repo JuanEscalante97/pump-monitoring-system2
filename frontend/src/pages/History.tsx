@@ -19,8 +19,7 @@ import {
   Alert,
   TableContainer,
   Checkbox,
-} from '@mui/material';
-import { History as HistoryIcon, Search, Edit3, ShieldAlert, Trash2 } from 'lucide-react';
+import { History as HistoryIcon, Search, Edit3, ShieldAlert, Trash2, MessageCircle, Copy } from 'lucide-react';
 import { api } from '../api/client';
 import { Measurement, Pump, Vessel, Product } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -142,6 +141,28 @@ export const History: React.FC = () => {
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Error al eliminar los registros.');
     }
+  };
+
+  const formatBriefSummary = (m: Measurement) => {
+    const pSucc = m.presion_succion_inhg !== null && m.presion_succion_inhg !== undefined ? `${m.presion_succion_inhg} inHg` : 'N/A';
+    return `📋 RESUMEN DE REGISTRO TÉCNICO\n` +
+           `🚢 Operación: OP-${m.operation_id}\n` +
+           `⚙️ Bomba: ${m.bomba?.codigo || '-'}\n` +
+           `🔩 P. Descarga: ${m.presion_descarga_psi} PSI | P. Succión: ${pSucc}\n` +
+           `🌡️ Temp: ${m.temperatura_c} °C | ⚡ Corriente: ${m.corriente_a} A\n` +
+           `🕒 Fecha/Hora: ${m.fecha_registro.split('-').reverse().join('/')} ${m.hora_registro.substring(0, 5)}\n` +
+           `✅ Estado: ${m.temperatura_c > 80 || m.corriente_a > 45 ? 'CRÍTICO 🚨' : 'NORMAL 🟢'}`;
+  };
+
+  const handleShareWhatsApp = (m: Measurement) => {
+    const text = encodeURIComponent(formatBriefSummary(m));
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  };
+
+  const handleCopySummary = (m: Measurement) => {
+    const text = formatBriefSummary(m);
+    navigator.clipboard.writeText(text);
+    alert('¡Estructura de registro copiada en el portapapeles y lista para compartir!');
   };
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -290,7 +311,7 @@ export const History: React.FC = () => {
                   </TableCell>
                   <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>{m.bomba?.codigo}</TableCell>
                   <TableCell>{m.tanque?.codigo || '-'}</TableCell>
-                  <TableCell>{m.presion_succion_inhg} inHg</TableCell>
+                  <TableCell>{m.presion_succion_inhg !== null && m.presion_succion_inhg !== undefined ? `${m.presion_succion_inhg} inHg` : '-'}</TableCell>
                   <TableCell>{m.presion_descarga_psi} psi</TableCell>
                   <TableCell sx={{ color: m.temperatura_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
                     {m.temperatura_c}°C
@@ -305,7 +326,26 @@ export const History: React.FC = () => {
                       <Chip label="ORIGINAL" color="success" size="small" sx={{ fontWeight: 700 }} />
                     )}
                   </TableCell>
-                  <TableCell align="right" sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                  <TableCell align="right" sx={{ display: 'flex', gap: 0.8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => handleShareWhatsApp(m)}
+                      sx={{ fontSize: '0.75rem', minWidth: 32, p: 0.5, backgroundColor: '#25D366', '&:hover': { backgroundColor: '#1EBE5D' } }}
+                      title="Compartir por WhatsApp"
+                    >
+                      <MessageCircle size={15} />
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="info"
+                      size="small"
+                      onClick={() => handleCopySummary(m)}
+                      sx={{ fontSize: '0.75rem', minWidth: 32, p: 0.5 }}
+                      title="Copiar Resumen"
+                    >
+                      <Copy size={15} />
+                    </Button>
                     <Button
                       variant="outlined"
                       size="small"

@@ -125,6 +125,7 @@ class Operation(Base):
     responsable_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     hora_inicio = Column(Time, nullable=False)
     hora_fin = Column(Time, nullable=True)
+    fecha_fin = Column(Date, nullable=True)
     estado = Column(String(20), default="Activa", index=True, nullable=False)  # Activa, Finalizada
     observaciones = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -162,7 +163,7 @@ class Measurement(Base):
     bomba_id = Column(Integer, ForeignKey("pumps.id"), nullable=False)
     tanque_id = Column(Integer, ForeignKey("tanks.id"), nullable=True) # Nullable para mantener compatibilidad
     inspection_id = Column(Integer, ForeignKey("scheduled_inspections.id"), nullable=True)
-    presion_succion_inhg = Column(Float, nullable=False)
+    presion_succion_inhg = Column(Float, nullable=True)
     presion_descarga_psi = Column(Float, nullable=False)
     temperatura_c = Column(Float, nullable=False)
     corriente_a = Column(Float, nullable=False)
