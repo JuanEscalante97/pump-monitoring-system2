@@ -146,7 +146,7 @@ export const Dashboard: React.FC = () => {
               <Thermometer size={20} color="#ef4444" />
             </Box>
             <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700, mt: 1 }}>
-              {kpis?.temperatura_promedio || 0}°C
+              {kpis?.operaciones_activas && kpis.operaciones_activas > 0 ? (kpis?.temperatura_promedio || 0) : 0}°C
             </Typography>
             <Typography variant="caption" sx={{ color: '#94a3b8' }}>
               Límite Máximo: 80.0°C
@@ -162,7 +162,7 @@ export const Dashboard: React.FC = () => {
               <Zap size={20} color="#10b981" />
             </Box>
             <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700, mt: 1 }}>
-              {kpis?.corriente_promedio || 0} A
+              {kpis?.operaciones_activas && kpis.operaciones_activas > 0 ? (kpis?.corriente_promedio || 0) : 0} A
             </Typography>
             <Typography variant="caption" sx={{ color: '#94a3b8' }}>
               Límite Máximo: 45.0 A
