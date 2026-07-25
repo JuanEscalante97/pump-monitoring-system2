@@ -25,7 +25,7 @@ def generate_operation_pdf_report(db: Session, operation: Operation) -> io.Bytes
         parent=styles['Heading1'],
         fontSize=18,
         leading=22,
-        textColor=colors.HexColor('#1a202c'),
+        textColor=colors.HexColor('#1A365D'),
         spaceAfter=6,
         alignment=1 # Center
     )
@@ -42,7 +42,7 @@ def generate_operation_pdf_report(db: Session, operation: Operation) -> io.Bytes
         parent=styles['Heading2'],
         fontSize=13,
         leading=16,
-        textColor=colors.HexColor('#2b6cb0'),
+        textColor=colors.HexColor('#1A365D'),
         spaceBefore=10,
         spaceAfter=6
     )
@@ -65,7 +65,7 @@ def generate_operation_pdf_report(db: Session, operation: Operation) -> io.Bytes
     story.append(Paragraph("SISTEMA DE MONITOREO DE CONDICIÓN DE BOMBAS DE TRANSFERENCIA", title_style))
     story.append(Paragraph("REPORTE OFICIAL DE OPERACIÓN Y MEDICIONES DE CAMPO", subtitle_style))
     story.append(Spacer(1, 10))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#2b6cb0'), spaceAfter=15))
+    story.append(HRFlowable(width="100%", thickness=2, color=colors.HexColor('#1A365D'), spaceAfter=15))
 
     # 2. General Operation Details
     tanks_str = ", ".join([t.codigo for t in operation.tanks]) if operation.tanks else "N/A"
@@ -152,12 +152,12 @@ def generate_operation_pdf_report(db: Session, operation: Operation) -> io.Bytes
 
     t_meas = Table(table_data, colWidths=[25, 60, 60, 85, 85, 80, 75, 70, 100, 80])
     t_meas.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2b6cb0')),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1A365D')),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e0')),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f7fafc')]),
-        ('PADDING', (0, 0), (-1, -1), 5),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E8F0')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8FAFC')]),
+        ('PADDING', (0, 0), (-1, -1), 6),
     ]))
     story.append(t_meas)
     story.append(Spacer(1, 30))

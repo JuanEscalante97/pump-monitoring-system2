@@ -13,12 +13,15 @@ import {
   TableRow,
   Chip,
   Alert,
+  IconButton,
 } from '@mui/material';
-import { ShieldAlert, CheckCircle2, AlertTriangle, Save } from 'lucide-react';
+import { Save, AlertTriangle, CheckCircle2, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
 import { AlarmEvent, AlarmThreshold } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 export const Alarms: React.FC = () => {
+  const { user } = useAuth();
   const [events, setEvents] = useState<AlarmEvent[]>([]);
   const [threshold, setThreshold] = useState<AlarmThreshold | null>(null);
 
@@ -93,6 +96,18 @@ export const Alarms: React.FC = () => {
       loadAlarmsData();
     } catch (err) {
       console.error('Error al reconocer alarma:', err);
+    }
+  };
+
+  const handleDeleteAlarm = async (id: number) => {
+    if (!window.confirm('¿Está seguro de que desea eliminar este evento de alarma permanentemente?')) {
+      return;
+    }
+    try {
+      await api.delete(`/alarms/events/${id}`);
+      loadAlarmsData();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al eliminar alarma');
     }
   };
 
@@ -196,17 +211,30 @@ export const Alarms: React.FC = () => {
                     <Chip label={ev.estado} color={isUnack ? 'error' : 'success'} size="small" />
                   </TableCell>
                   <TableCell align="right">
-                    {isUnack && (
-                      <Button
-                        variant="contained"
-                        color="success"
-                        size="small"
-                        startIcon={<CheckCircle2 size={14} />}
-                        onClick={() => handleAcknowledge(ev.id)}
-                      >
-                        Reconocer
-                      </Button>
-                    )}
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                      {isUnack && (
+                        <Button
+                          variant="contained"
+                          color="success"
+                          size="small"
+                          startIcon={<CheckCircle2 size={14} />}
+                          onClick={() => handleAcknowledge(ev.id)}
+                        >
+                          Reconocer
+                        </Button>
+                      )}
+                      {user?.role === 'Administrador' && (
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          startIcon={<Trash2 size={14} />}
+                          onClick={() => handleDeleteAlarm(ev.id)}
+                        >
+                          Eliminar
+                        </Button>
+                      )}
+                    </Box>
                   </TableCell>
                 </TableRow>
               );

@@ -135,12 +135,18 @@ def generate_operation_excel_report(db: Session, operation: Operation) -> io.Byt
             a.mensaje
         ])
 
-    # Auto-adjust column widths for all sheets
+    # Auto-adjust column widths and apply borders for all sheets
     for ws in [ws1, ws2, ws3]:
         for col in ws.columns:
-            max_len = max(len(str(cell.value or '')) for cell in col)
+            max_len = 0
             col_letter = get_column_letter(col[0].column)
-            ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+            for cell in col:
+                if cell.value:
+                    cell.border = border_thin
+                    cell_len = len(str(cell.value))
+                    if cell_len > max_len:
+                        max_len = cell_len
+            ws.column_dimensions[col_letter].width = min(max(max_len + 3, 12), 60)
 
     buffer = io.BytesIO()
     wb.save(buffer)

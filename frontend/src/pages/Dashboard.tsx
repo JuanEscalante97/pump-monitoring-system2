@@ -82,19 +82,19 @@ export const Dashboard: React.FC = () => {
       {errorMsg && <Alert severity="warning" sx={{ mb: 3 }}>{errorMsg}</Alert>}
       {/* Top Banner & Quick Actions */}
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 3, gap: 2 }}>
         <Box>
-          <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700 }}>
+          <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
             PANEL DE CONTROL
           </Typography>
-          <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+          <Typography variant="body2" sx={{ color: '#94a3b8', mt: 0.5, lineHeight: 1.3 }}>
             Terminal de Líquidos Tramarsa - Ilo | Monitoreo en tiempo real de condición de bombas de embarque.
           </Typography>
         </Box>
 
-
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' } }}>
           <Button
+            fullWidth
             variant="outlined"
             startIcon={<RefreshCw size={18} />}
             onClick={loadDashboardData}

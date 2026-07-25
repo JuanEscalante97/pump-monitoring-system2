@@ -74,3 +74,27 @@ def acknowledge_alarm_event(
     )
 
     return event
+
+@router.delete("/events/{event_id}", status_code=204)
+def delete_alarm_event(
+    event_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "Administrador":
+        raise HTTPException(status_code=403, detail="Permisos insuficientes para eliminar alarmas")
+
+    event = db.query(AlarmEvent).filter(AlarmEvent.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Evento de alarma no encontrado")
+
+    tipo = event.tipo_alarma
+    db.delete(event)
+    db.commit()
+
+    log_audit_action(
+        db, current_user, "DELETE_ALARM", "AlarmEvent", event_id,
+        get_client_ip(request), f"Alarma eliminada manualmente: {tipo}"
+    )
+    return None

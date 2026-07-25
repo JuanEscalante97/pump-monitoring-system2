@@ -11,6 +11,7 @@ import {
   Chip,
   Button,
   TableContainer,
+  Checkbox,
 } from '@mui/material';
 import { FileCheck, Shield, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -20,9 +21,13 @@ import { AuditLog } from '../types';
 export const Audit: React.FC = () => {
   const { user } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const loadLogs = () => {
-    api.get('/audit').then((res) => setLogs(res.data));
+    api.get('/audit').then((res) => {
+      setLogs(res.data);
+      setSelectedIds([]);
+    });
   };
 
   useEffect(() => {
@@ -39,15 +44,52 @@ export const Audit: React.FC = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`¿Está seguro de eliminar ${selectedIds.length} registros seleccionados? Esta acción es irreversible.`)) return;
+    try {
+      await api.post('/audit/bulk-delete', { ids: selectedIds });
+      loadLogs();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al eliminar registros');
+    }
+  };
+
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      setSelectedIds(logs.map(log => log.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: number) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
   return (
     <Box>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700 }}>
-          BITÁCORA Y AUDITORÍA DEL SISTEMA
-        </Typography>
-        <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-          Registro automático de usuario, fecha, hora, dirección IP y acción realizada. Cumplimiento de trazabilidad corporativa.
-        </Typography>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700 }}>
+            BITÁCORA Y AUDITORÍA DEL SISTEMA
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+            Registro automático de usuario, fecha, hora, dirección IP y acción realizada. Cumplimiento de trazabilidad corporativa.
+          </Typography>
+        </Box>
+        {user?.role === 'Administrador' && selectedIds.length > 0 && (
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<Trash2 size={18} />}
+            onClick={handleBulkDelete}
+          >
+            Eliminar Seleccionados ({selectedIds.length})
+          </Button>
+        )}
       </Box>
 
       <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3 }}>
@@ -55,6 +97,16 @@ export const Audit: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
+                {user?.role === 'Administrador' && (
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      indeterminate={selectedIds.length > 0 && selectedIds.length < logs.length}
+                      checked={logs.length > 0 && selectedIds.length === logs.length}
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>Fecha y Hora</TableCell>
                 <TableCell>Usuario</TableCell>
                 <TableCell>Acción Realizada</TableCell>
@@ -65,10 +117,21 @@ export const Audit: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {logs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell sx={{ fontWeight: 700 }}>{new Date(log.fecha_hora).toLocaleString()}</TableCell>
-                  <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>{log.username}</TableCell>
+              {logs.map((log) => {
+                const isSelected = selectedIds.includes(log.id);
+                return (
+                  <TableRow key={log.id} selected={isSelected}>
+                    {user?.role === 'Administrador' && (
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          color="primary"
+                          checked={isSelected}
+                          onChange={() => handleSelectOne(log.id)}
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell sx={{ fontWeight: 700 }}>{new Date(log.fecha_hora).toLocaleString()}</TableCell>
+                    <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>{log.username}</TableCell>
                   <TableCell>
                     <Chip label={log.accion} size="small" color="primary" sx={{ fontWeight: 700 }} />
                   </TableCell>
@@ -88,8 +151,9 @@ export const Audit: React.FC = () => {
                       </Button>
                     </TableCell>
                   )}
-                </TableRow>
-              ))}
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>

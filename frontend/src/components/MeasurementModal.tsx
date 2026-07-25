@@ -45,6 +45,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [alarmWarning, setAlarmWarning] = useState<string | null>(null);
 
   React.useEffect(() => {
@@ -56,6 +57,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
     e.preventDefault();
     setError(null);
     setAlarmWarning(null);
+    setSaveSuccess(false);
     setLoading(true);
 
     try {
@@ -77,10 +79,13 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
       const currVal = parseFloat(corriente);
       if (tempVal > 80.0 || currVal > 45.0) {
         setAlarmWarning('¡ADVERTENCIA DE SEGURIDAD! La lectura fue registrada pero ha sobrepasado los límites de alarma (Temp > 80°C o Corriente > 45 A).');
+      } else {
+        setSaveSuccess(true);
       }
 
       onSuccess();
       setTimeout(() => {
+        setSaveSuccess(false);
         onClose();
       }, 1500);
     } catch (err: any) {
@@ -103,6 +108,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
         <DialogContent sx={{ pt: 2.5 }}>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           {alarmWarning && <Alert severity="warning" sx={{ mb: 2 }}>{alarmWarning}</Alert>}
+          {saveSuccess && <Alert severity="success" sx={{ mb: 2 }}>Registro hecho exitosamente.</Alert>}
 
           {/* Automatic Server Clock Notice */}
           <Paper sx={{ p: 1.5, mb: 3, backgroundColor: 'rgba(49, 130, 206, 0.1)', border: '1px dashed #3182ce', borderRadius: 2 }}>
