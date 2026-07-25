@@ -46,28 +46,37 @@ from sqlalchemy import text
 # Create database tables automatically on startup
 @app.on_event("startup")
 def startup_db():
-    logger.info("Inicializando tablas en la base de datos PostgreSQL...")
+    logger.info("Inicializando tablas y verificando esquema en la base de datos...")
     Base.metadata.create_all(bind=engine)
     
-    # Parche automático para agregar tanque_id a measurements si no existe
+    # Parche seguro columna por columna en transacciones aisladas (evita "transaction aborted" en PostgreSQL)
+    columns_to_check = [
+        ("measurements", "tanque_id", "INTEGER REFERENCES tanks(id)"),
+        ("measurements", "tecnico_mecanico", "VARCHAR(100)"),
+        ("measurements", "is_corrected", "BOOLEAN DEFAULT FALSE"),
+        ("measurements", "corregido_motivo", "TEXT"),
+        ("alarm_events", "measurement_id", "INTEGER REFERENCES measurements(id)"),
+    ]
+    
+    for table, col, col_type in columns_to_check:
+        try:
+            with engine.connect() as conn:
+                is_sqlite = "sqlite" in str(engine.url).lower()
+                sql = f"ALTER TABLE {table} ADD COLUMN {col} {col_type}" if is_sqlite else f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {col_type}"
+                conn.execute(text(sql))
+                conn.commit()
+        except Exception as e:
+            pass
+            
+    # Limpiar registros huérfanos de manera independiente
     try:
-        with engine.begin() as conn:
-            # Postgres / SQLite compatible way to add column if it fails we just catch and ignore
-            try:
-                conn.execute(text("ALTER TABLE measurements ADD COLUMN tanque_id INTEGER REFERENCES tanks(id)"))
-                logger.info("Columna 'tanque_id' añadida exitosamente a measurements.")
-            except Exception as e:
-                pass
-                
-            # Limpiar registros huérfanos dejados por SQLite al no imponer foreign keys por defecto
-            try:
-                conn.execute(text("DELETE FROM measurements WHERE operation_id NOT IN (SELECT id FROM operations)"))
-                conn.execute(text("DELETE FROM alarm_events WHERE operacion_id NOT IN (SELECT id FROM operations)"))
-                logger.info("Registros huérfanos limpiados exitosamente.")
-            except Exception as e:
-                logger.error(f"Error limpiando huérfanos: {e}")
+        with engine.connect() as conn:
+            conn.execute(text("DELETE FROM measurements WHERE operation_id NOT IN (SELECT id FROM operations)"))
+            conn.execute(text("DELETE FROM alarm_events WHERE operacion_id NOT IN (SELECT id FROM operations)"))
+            conn.commit()
+            logger.info("Registros huérfanos limpiados exitosamente.")
     except Exception as e:
-        logger.error(f"Error en parche de BD: {e}")
+        logger.error(f"Error limpiando huérfanos: {e}")
 
     logger.info("Tablas creadas/verificadas exitosamente.")
 

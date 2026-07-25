@@ -44,19 +44,24 @@ export const Operations: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [opRes, vRes, prRes] = await Promise.all([
-        api.get('/operations'),
-        api.get('/vessels'),
-        api.get('/products'),
-      ]);
-
+      const opRes = await api.get('/operations');
       setOperations(opRes.data);
-      setVessels(vRes.data);
-      setProducts(prRes.data);
-      setSelectedIds([]);
     } catch (err) {
       console.error('Error al cargar operaciones:', err);
     }
+    try {
+      const vRes = await api.get('/vessels');
+      setVessels(vRes.data);
+    } catch (err) {
+      console.error('Error al cargar buques:', err);
+    }
+    try {
+      const prRes = await api.get('/products');
+      setProducts(prRes.data);
+    } catch (err) {
+      console.error('Error al cargar productos:', err);
+    }
+    setSelectedIds([]);
   };
 
   useEffect(() => {

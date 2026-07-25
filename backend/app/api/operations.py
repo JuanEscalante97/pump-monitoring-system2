@@ -12,6 +12,31 @@ from app.services.inspection_service import generate_hourly_inspections
 
 router = APIRouter(prefix="/api/operations", tags=["Operaciones de Bombeo"])
 
+def build_operation_response(db: Session, op: Operation) -> OperationResponse:
+    op_resp = OperationResponse.model_validate(op)
+    try:
+        dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
+    except Exception:
+        dynamic_tanks = []
+    try:
+        dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
+    except Exception:
+        dynamic_pumps = []
+        
+    try:
+        all_tanks = {t.id: t for t in (list(op.tanks) + dynamic_tanks)}.values()
+    except Exception:
+        all_tanks = dynamic_tanks
+        
+    try:
+        all_pumps = {p.id: p for p in (list(op.pumps) + dynamic_pumps)}.values()
+    except Exception:
+        all_pumps = dynamic_pumps
+        
+    op_resp.tanks = [TankResponse.model_validate(t) for t in all_tanks]
+    op_resp.pumps = [PumpResponse.model_validate(p) for p in all_pumps]
+    return op_resp
+
 @router.get("", response_model=List[OperationResponse])
 def list_operations(
     estado: Optional[str] = None,
@@ -22,20 +47,7 @@ def list_operations(
     if estado:
         query = query.filter(Operation.estado == estado)
     operations = query.order_by(Operation.created_at.desc()).all()
-
-    # Dynamically inject tanks and pumps based on measurements (since we decoupled them from operation creation)
-    results = []
-    for op in operations:
-        op_resp = OperationResponse.model_validate(op)
-        dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
-        dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
-        all_tanks = {t.id: t for t in (list(op.tanks) + dynamic_tanks)}.values()
-        all_pumps = {p.id: p for p in (list(op.pumps) + dynamic_pumps)}.values()
-        op_resp.tanks = [TankResponse.model_validate(t) for t in all_tanks]
-        op_resp.pumps = [PumpResponse.model_validate(p) for p in all_pumps]
-        results.append(op_resp)
-        
-    return results
+    return [build_operation_response(db, op) for op in operations]
 
 @router.get("/migrate-codes")
 def migrate_op_codes(db: Session = Depends(get_db)):
@@ -54,15 +66,7 @@ def get_active_operation(
     op = db.query(Operation).filter(Operation.estado == "Activa").order_by(Operation.created_at.desc()).first()
     if not op:
         return None
-    
-    op_resp = OperationResponse.model_validate(op)
-    dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
-    dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
-    all_tanks = {t.id: t for t in (list(op.tanks) + dynamic_tanks)}.values()
-    all_pumps = {p.id: p for p in (list(op.pumps) + dynamic_pumps)}.values()
-    op_resp.tanks = [TankResponse.model_validate(t) for t in all_tanks]
-    op_resp.pumps = [PumpResponse.model_validate(p) for p in all_pumps]
-    return op_resp
+    return build_operation_response(db, op)
 
 @router.post("", response_model=OperationResponse, status_code=status.HTTP_201_CREATED)
 def create_operation(
