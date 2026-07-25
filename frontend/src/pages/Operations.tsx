@@ -85,13 +85,18 @@ export const Operations: React.FC = () => {
       await api.post('/operations', {
         buque_id: Number(selectedVessel),
         producto_id: Number(selectedProduct),
-        tank_ids: [],
-        pump_ids: [],
+        tank_ids: selectedTanks,
+        pump_ids: selectedPumps,
         observaciones,
       });
 
+      setSelectedVessel('');
+      setSelectedProduct('');
+      setSelectedTanks([]);
+      setSelectedPumps([]);
+      setObservaciones('');
       setDialogOpen(false);
-      loadData();
+      await loadData();
       navigate('/monitoring');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Error al iniciar la operación.');
@@ -181,6 +186,11 @@ export const Operations: React.FC = () => {
             variant="contained"
             startIcon={<Plus size={18} />}
             onClick={() => {
+              setSelectedVessel('');
+              setSelectedProduct('');
+              setSelectedTanks([]);
+              setSelectedPumps([]);
+              setObservaciones('');
               setError(null);
               setDialogOpen(true);
             }}
@@ -298,41 +308,95 @@ export const Operations: React.FC = () => {
           <DialogContent>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-            <Grid container spacing={2}>
+            <Grid container spacing={2.5}>
               <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  fullWidth
-                  required
-                  label="Buque Destino"
-                  InputLabelProps={{ shrink: true }}
-                  value={selectedVessel}
-                  onChange={(e) => setSelectedVessel(Number(e.target.value))}
-                  SelectProps={{ native: true }}
-                >
-                  <option value="" disabled>Seleccionar Buque...</option>
-                  {vessels.map((v) => (
-                    <option key={v.id} value={v.id} style={{ background: '#1e293b' }}>{v.nombre} ({v.empresa})</option>
-                  ))}
-                </TextField>
+                <FormControl fullWidth required>
+                  <InputLabel shrink sx={{ backgroundColor: '#0f172a', px: 0.5, color: '#94a3b8' }}>Buque Destino</InputLabel>
+                  <Select
+                    displayEmpty
+                    value={selectedVessel}
+                    label="Buque Destino"
+                    onChange={(e) => setSelectedVessel(Number(e.target.value))}
+                    sx={{ mt: 0.5 }}
+                  >
+                    <MenuItem value="" disabled><em>Seleccionar Buque...</em></MenuItem>
+                    {vessels.map((v) => (
+                      <MenuItem key={v.id} value={v.id}>{v.nombre} ({v.empresa})</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  fullWidth
-                  required
-                  label="Producto a Transferir"
-                  InputLabelProps={{ shrink: true }}
-                  value={selectedProduct}
-                  onChange={(e) => setSelectedProduct(Number(e.target.value))}
-                  SelectProps={{ native: true }}
-                >
-                  <option value="" disabled>Seleccionar Producto...</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id} style={{ background: '#1e293b' }}>{p.nombre}</option>
-                  ))}
-                </TextField>
+                <FormControl fullWidth required>
+                  <InputLabel shrink sx={{ backgroundColor: '#0f172a', px: 0.5, color: '#94a3b8' }}>Producto a Transferir</InputLabel>
+                  <Select
+                    displayEmpty
+                    value={selectedProduct}
+                    label="Producto a Transferir"
+                    onChange={(e) => setSelectedProduct(Number(e.target.value))}
+                    sx={{ mt: 0.5 }}
+                  >
+                    <MenuItem value="" disabled><em>Seleccionar Producto...</em></MenuItem>
+                    {products.map((p) => (
+                      <MenuItem key={p.id} value={p.id}>{p.nombre}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel shrink sx={{ backgroundColor: '#0f172a', px: 0.5, color: '#94a3b8' }}>Bombas Habilitadas</InputLabel>
+                  <Select
+                    multiple
+                    displayEmpty
+                    value={selectedPumps}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedPumps(typeof val === 'string' ? val.split(',').map(Number) : val);
+                    }}
+                    renderValue={(selected) => {
+                      if (selected.length === 0) return <em style={{ color: '#64748b' }}>Seleccionar Bombas...</em>;
+                      return selected.map(id => pumps.find(p => p.id === id)?.codigo || id).join(', ');
+                    }}
+                    sx={{ mt: 0.5 }}
+                  >
+                    {pumps.map((p) => (
+                      <MenuItem key={p.id} value={p.id}>
+                        <Checkbox checked={selectedPumps.indexOf(p.id) > -1} color="primary" />
+                        <ListItemText primary={`${p.codigo}`} secondary={`${p.marca} ${p.modelo}`} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel shrink sx={{ backgroundColor: '#0f172a', px: 0.5, color: '#94a3b8' }}>Tanques Habilitados</InputLabel>
+                  <Select
+                    multiple
+                    displayEmpty
+                    value={selectedTanks}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedTanks(typeof val === 'string' ? val.split(',').map(Number) : val);
+                    }}
+                    renderValue={(selected) => {
+                      if (selected.length === 0) return <em style={{ color: '#64748b' }}>Seleccionar Tanques...</em>;
+                      return selected.map(id => tanks.find(t => t.id === id)?.codigo || id).join(', ');
+                    }}
+                    sx={{ mt: 0.5 }}
+                  >
+                    {tanks.map((t) => (
+                      <MenuItem key={t.id} value={t.id}>
+                        <Checkbox checked={selectedTanks.indexOf(t.id) > -1} color="primary" />
+                        <ListItemText primary={t.codigo} secondary={t.producto?.nombre} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
 
               <Grid item xs={12}>
@@ -343,12 +407,13 @@ export const Operations: React.FC = () => {
                   label="Observaciones Iniciales"
                   value={observaciones}
                   onChange={(e) => setObservaciones(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
                 />
               </Grid>
             </Grid>
           </DialogContent>
           <DialogActions sx={{ p: 2 }}>
-            <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={() => { setDialogOpen(false); setError(null); }}>Cancelar</Button>
             <Button type="submit" variant="contained" disabled={loading}>
               Iniciar Operación
             </Button>

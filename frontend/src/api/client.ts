@@ -16,6 +16,14 @@ api.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    if (config.method === 'get' || config.method === 'GET' || !config.method) {
+      config.params = { ...config.params, _t: Date.now() };
+      if (config.headers) {
+        config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+        config.headers['Pragma'] = 'no-cache';
+        config.headers['Expires'] = '0';
+      }
+    }
     return config;
   },
   (error) => Promise.reject(error)
