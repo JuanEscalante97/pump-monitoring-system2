@@ -189,7 +189,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
                         </Box>
                         <Box>
                           <Typography variant="subtitle1" sx={{ color: '#f8fafc', fontWeight: 700, lineHeight: 1.1 }}>
-                            {pump.codigo} - {pump.nombre}
+                            {pump.codigo.replace(/^_\s*/, '').replace(/^PU\s+/i, 'PU-')}
                           </Typography>
                           <Typography variant="caption" sx={{ color: '#94a3b8' }}>
                             {pump.marca} {pump.modelo} | {pump.potencia_kw} kW ({pump.motor_info})

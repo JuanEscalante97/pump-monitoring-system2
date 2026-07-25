@@ -17,9 +17,10 @@ import {
   DialogActions,
   TextField,
   Grid,
-  Chip,
   IconButton,
   Checkbox,
+  TableContainer,
+  Chip,
 } from '@mui/material';
 import { Database, Plus, Edit2, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
@@ -264,6 +265,9 @@ export const Catalogs: React.FC = () => {
         <Tabs
           value={activeTab}
           onChange={(_, val) => setActiveTab(val)}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{ borderBottom: '1px solid #1e293b' }}
         >
           <Tab label="BOMBAS CENTRÍFUGAS" sx={{ fontWeight: 700 }} />
@@ -276,7 +280,8 @@ export const Catalogs: React.FC = () => {
       {/* TAB 0: BOMBAS */}
       {activeTab === 0 && (
         <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3 }}>
-          <Table>
+          <TableContainer component={Box} sx={{ overflowX: 'auto' }}>
+            <Table>
             <TableHead>
               <TableRow>
                 {user?.role === 'Administrador' && (
@@ -330,14 +335,16 @@ export const Catalogs: React.FC = () => {
                 );
               })}
             </TableBody>
-          </Table>
+            </Table>
+          </TableContainer>
         </Paper>
       )}
 
       {/* TAB 1: TANQUES */}
       {activeTab === 1 && (
         <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3 }}>
-          <Table>
+          <TableContainer component={Box} sx={{ overflowX: 'auto' }}>
+            <Table>
             <TableHead>
               <TableRow>
                 {user?.role === 'Administrador' && (
@@ -383,14 +390,16 @@ export const Catalogs: React.FC = () => {
                 );
               })}
             </TableBody>
-          </Table>
+            </Table>
+          </TableContainer>
         </Paper>
       )}
 
       {/* TAB 2: PRODUCTOS */}
       {activeTab === 2 && (
         <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3 }}>
-          <Table>
+          <TableContainer component={Box} sx={{ overflowX: 'auto' }}>
+            <Table>
             <TableHead>
               <TableRow>
                 {user?.role === 'Administrador' && (
@@ -436,14 +445,16 @@ export const Catalogs: React.FC = () => {
                 );
               })}
             </TableBody>
-          </Table>
+            </Table>
+          </TableContainer>
         </Paper>
       )}
 
       {/* TAB 3: BUQUES */}
       {activeTab === 3 && (
         <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3 }}>
-          <Table>
+          <TableContainer component={Box} sx={{ overflowX: 'auto' }}>
+            <Table>
             <TableHead>
               <TableRow>
                 {user?.role === 'Administrador' && (
@@ -487,7 +498,8 @@ export const Catalogs: React.FC = () => {
                 );
               })}
             </TableBody>
-          </Table>
+            </Table>
+          </TableContainer>
         </Paper>
       )}
 

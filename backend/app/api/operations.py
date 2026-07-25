@@ -27,11 +27,10 @@ def list_operations(
     results = []
     for op in operations:
         op_dict = OperationResponse.model_validate(op).model_dump()
-        dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
-        dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
-        
-        op_dict["tanks"] = [TankResponse.model_validate(t).model_dump() for t in dynamic_tanks]
-        op_dict["pumps"] = [PumpResponse.model_validate(p).model_dump() for p in dynamic_pumps]
+        all_tanks = {t.id: t for t in (list(op.tanks) + dynamic_tanks)}.values()
+        all_pumps = {p.id: p for p in (list(op.pumps) + dynamic_pumps)}.values()
+        op_dict["tanks"] = [TankResponse.model_validate(t).model_dump() for t in all_tanks]
+        op_dict["pumps"] = [PumpResponse.model_validate(p).model_dump() for p in all_pumps]
         results.append(op_dict)
         
     return results
@@ -55,11 +54,10 @@ def get_active_operation(
         return None
     
     op_dict = OperationResponse.model_validate(op).model_dump()
-    dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
-    dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
-    
-    op_dict["tanks"] = [TankResponse.model_validate(t).model_dump() for t in dynamic_tanks]
-    op_dict["pumps"] = [PumpResponse.model_validate(p).model_dump() for p in dynamic_pumps]
+    all_tanks = {t.id: t for t in (list(op.tanks) + dynamic_tanks)}.values()
+    all_pumps = {p.id: p for p in (list(op.pumps) + dynamic_pumps)}.values()
+    op_dict["tanks"] = [TankResponse.model_validate(t).model_dump() for t in all_tanks]
+    op_dict["pumps"] = [PumpResponse.model_validate(p).model_dump() for p in all_pumps]
     return op_dict
 
 @router.post("", response_model=OperationResponse, status_code=status.HTTP_201_CREATED)
@@ -93,9 +91,13 @@ def create_operation(
     tz_peru = timezone(timedelta(hours=-5))
     now_dt = datetime.now(tz_peru).replace(tzinfo=None)
     
-    # Generate global short OP Code
-    count_total = db.query(Operation).count() + 1
-    codigo_op = f"OP-{count_total:03d}"
+    # Generate global short OP Code without collisions after deletions
+    next_num = db.query(Operation).count() + 1
+    while True:
+        codigo_op = f"OP-{next_num:03d}"
+        if not db.query(Operation).filter(Operation.codigo_operacion == codigo_op).first():
+            break
+        next_num += 1
 
     operation = Operation(
         codigo_operacion=codigo_op,
