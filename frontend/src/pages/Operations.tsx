@@ -268,7 +268,7 @@ export const Operations: React.FC = () => {
                           Finalizar
                         </Button>
                       )}
-                      {user?.role === 'Administrador' && (
+                      {(user?.role === 'Administrador' || op.estado === 'Activa') && (
                         <Button
                           variant="outlined"
                           color="error"

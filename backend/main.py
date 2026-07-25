@@ -78,27 +78,29 @@ def startup_db():
     except Exception as e:
         logger.error(f"Error limpiando huérfanos: {e}")
 
-    # Limpieza única programada: Eliminar operación activa (OP-001 o abiertas en pruebas) una única vez
+    # Limpieza garantizada vía ORM de SQLAlchemy para evitar bloqueos de transacción en PostgreSQL (Render)
     try:
-        with engine.connect() as conn:
-            conn.execute(text("CREATE TABLE IF NOT EXISTS system_patches (patch_id VARCHAR(50) PRIMARY KEY, executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"))
-            res = conn.execute(text("SELECT patch_id FROM system_patches WHERE patch_id = 'cleanup_op_001_v1'")).fetchone()
-            if not res:
-                logger.info("Ejecutando limpieza única de operación abierta OP-001 y operaciones activas pegadas...")
-                conn.execute(text("DELETE FROM scheduled_inspections WHERE operation_id IN (SELECT id FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001')"))
-                conn.execute(text("DELETE FROM alarm_events WHERE operacion_id IN (SELECT id FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001')"))
-                conn.execute(text("DELETE FROM measurements WHERE operation_id IN (SELECT id FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001')"))
-                try:
-                    conn.execute(text("DELETE FROM operation_tanks WHERE operation_id IN (SELECT id FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001')"))
-                    conn.execute(text("DELETE FROM operation_pumps WHERE operation_id IN (SELECT id FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001')"))
-                except Exception:
-                    pass
-                conn.execute(text("DELETE FROM operations WHERE estado = 'Activa' OR codigo_operacion = 'OP-001'"))
-                conn.execute(text("INSERT INTO system_patches (patch_id) VALUES ('cleanup_op_001_v1')"))
-                conn.commit()
-                logger.info("Limpieza única completada con éxito. Operación abierta eliminada.")
+        from app.database.session import SessionLocal
+        from app.models.models import Operation, Measurement, AlarmEvent, ScheduledInspection
+        db = SessionLocal()
+        try:
+            # Eliminar cualquier operación abierta en estado "Activa" o que sea "OP-001" para liberar el sistema
+            stuck_ops = db.query(Operation).filter((Operation.estado == "Activa") | (Operation.codigo_operacion == "OP-001")).all()
+            for op in stuck_ops:
+                logger.info(f"Eliminando operación pegada: {op.codigo_operacion} (ID: {op.id})")
+                db.query(Measurement).filter(Measurement.operation_id == op.id).delete(synchronize_session=False)
+                db.query(AlarmEvent).filter(AlarmEvent.operacion_id == op.id).delete(synchronize_session=False)
+                db.query(ScheduledInspection).filter(ScheduledInspection.operation_id == op.id).delete(synchronize_session=False)
+                db.delete(op)
+            db.commit()
+            logger.info(f"Limpieza ORM completada con éxito: {len(stuck_ops)} operaciones abiertas eliminadas.")
+        except Exception as e_orm:
+            db.rollback()
+            logger.error(f"Error en limpieza ORM: {e_orm}")
+        finally:
+            db.close()
     except Exception as e:
-        logger.error(f"Error en limpieza de operación abierta: {e}")
+        logger.error(f"Error en inicialización de sesión de limpieza: {e}")
 
     logger.info("Tablas creadas/verificadas exitosamente.")
 

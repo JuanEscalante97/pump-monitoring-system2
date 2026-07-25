@@ -175,12 +175,12 @@ def delete_operation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if current_user.role != "Administrador":
-        raise HTTPException(status_code=403, detail="Permisos insuficientes para eliminar operaciones")
-        
     operation = db.query(Operation).filter(Operation.id == operation_id).first()
     if not operation:
         raise HTTPException(status_code=404, detail="Operación no encontrada")
+        
+    if current_user.role != "Administrador" and operation.estado != "Activa":
+        raise HTTPException(status_code=403, detail="Permisos insuficientes para eliminar operaciones finalizadas")
         
     codigo = operation.codigo_operacion
     
