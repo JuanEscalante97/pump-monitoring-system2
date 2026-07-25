@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import { Database, Plus, Edit2, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
-import { Pump, Tank, Product, Vessel } from '../types';
+import { Pump, Tank, Product, Vessel, AlarmThreshold } from '../types';
 
 export const Catalogs: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -30,6 +30,7 @@ export const Catalogs: React.FC = () => {
   const [tanks, setTanks] = useState<Tank[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [vessels, setVessels] = useState<Vessel[]>([]);
+  const [thresholds, setThresholds] = useState<AlarmThreshold[]>([]);
 
   // Dialog States
   const [modalType, setModalType] = useState<'pump' | 'tank' | 'product' | 'vessel' | null>(null);
@@ -40,16 +41,18 @@ export const Catalogs: React.FC = () => {
 
   const loadAll = async () => {
     try {
-      const [pRes, tRes, prRes, vRes] = await Promise.all([
+      const [pRes, tRes, prRes, vRes, thRes] = await Promise.all([
         api.get('/pumps'),
         api.get('/tanks'),
         api.get('/products'),
         api.get('/vessels'),
+        api.get('/alarms/thresholds'),
       ]);
       setPumps(pRes.data);
       setTanks(tRes.data);
       setProducts(prRes.data);
       setVessels(vRes.data);
+      setThresholds(thRes.data);
     } catch (err) {
       console.error('Error al cargar catálogos:', err);
     }
@@ -63,12 +66,18 @@ export const Catalogs: React.FC = () => {
     e.preventDefault();
     try {
       if (editingId) {
-        if (modalType === 'pump') await api.put(`/pumps/${editingId}`, formData);
+        if (modalType === 'pump') {
+          const res = await api.put(`/pumps/${editingId}`, formData);
+          await saveThreshold(res.data.id, formData);
+        }
         else if (modalType === 'tank') await api.put(`/tanks/${editingId}`, formData);
         else if (modalType === 'product') await api.put(`/products/${editingId}`, formData);
         else if (modalType === 'vessel') await api.put(`/vessels/${editingId}`, formData);
       } else {
-        if (modalType === 'pump') await api.post('/pumps', formData);
+        if (modalType === 'pump') {
+          const res = await api.post('/pumps', formData);
+          await saveThreshold(res.data.id, formData);
+        }
         else if (modalType === 'tank') await api.post('/tanks', formData);
         else if (modalType === 'product') await api.post('/products', formData);
         else if (modalType === 'vessel') await api.post('/vessels', formData);
@@ -83,10 +92,49 @@ export const Catalogs: React.FC = () => {
     }
   };
 
+  const saveThreshold = async (pumpId: number, data: any) => {
+    try {
+      await api.post('/alarms/thresholds', {
+        bomba_id: pumpId,
+        temp_max_c: parseFloat(data.temp_max_c || '80.0'),
+        corriente_max_a: parseFloat(data.corriente_max_a || '45.0'),
+        presion_suc_min_inhg: parseFloat(data.presion_suc_min_inhg || '-10.0'),
+        presion_suc_max_inhg: parseFloat(data.presion_suc_max_inhg || '30.0'),
+        presion_desc_min_psi: parseFloat(data.presion_desc_min_psi || '20.0'),
+        presion_desc_max_psi: parseFloat(data.presion_desc_max_psi || '150.0'),
+        is_active: true,
+      });
+    } catch (err) {
+      console.error('Error saving threshold', err);
+    }
+  };
+
   const handleEdit = (type: 'pump' | 'tank' | 'product' | 'vessel', item: any) => {
     setModalType(type);
     setEditingId(item.id);
-    setFormData(item);
+    let data = { ...item };
+    if (type === 'pump') {
+      const th = thresholds.find(t => t.bomba_id === item.id);
+      if (th) {
+        data.temp_max_c = th.temp_max_c;
+        data.corriente_max_a = th.corriente_max_a;
+        data.presion_suc_min_inhg = th.presion_suc_min_inhg;
+        data.presion_suc_max_inhg = th.presion_suc_max_inhg;
+        data.presion_desc_min_psi = th.presion_desc_min_psi;
+        data.presion_desc_max_psi = th.presion_desc_max_psi;
+      } else {
+        const globalTh = thresholds.find(t => t.bomba_id === null);
+        if (globalTh) {
+          data.temp_max_c = globalTh.temp_max_c;
+          data.corriente_max_a = globalTh.corriente_max_a;
+          data.presion_suc_min_inhg = globalTh.presion_suc_min_inhg;
+          data.presion_suc_max_inhg = globalTh.presion_suc_max_inhg;
+          data.presion_desc_min_psi = globalTh.presion_desc_min_psi;
+          data.presion_desc_max_psi = globalTh.presion_desc_max_psi;
+        }
+      }
+    }
+    setFormData(data);
   };
 
   const handleDelete = async (type: 'pump' | 'tank' | 'product' | 'vessel', id: number) => {
@@ -118,11 +166,23 @@ export const Catalogs: React.FC = () => {
           variant="contained"
           startIcon={<Plus size={18} />}
           onClick={() => {
-            setFormData({});
-            if (activeTab === 0) setModalType('pump');
+            let data: any = {};
+            if (activeTab === 0) {
+              setModalType('pump');
+              const globalTh = thresholds.find(t => t.bomba_id === null);
+              if (globalTh) {
+                data.temp_max_c = globalTh.temp_max_c;
+                data.corriente_max_a = globalTh.corriente_max_a;
+                data.presion_suc_min_inhg = globalTh.presion_suc_min_inhg;
+                data.presion_suc_max_inhg = globalTh.presion_suc_max_inhg;
+                data.presion_desc_min_psi = globalTh.presion_desc_min_psi;
+                data.presion_desc_max_psi = globalTh.presion_desc_max_psi;
+              }
+            }
             if (activeTab === 1) setModalType('tank');
             if (activeTab === 2) setModalType('product');
             if (activeTab === 3) setModalType('vessel');
+            setFormData(data);
           }}
         >
           Agregar Nuevo
@@ -310,6 +370,15 @@ export const Catalogs: React.FC = () => {
                   <Grid item xs={6}><TextField fullWidth type="number" label="Caudal m³/h (Opcional)" value={formData.caudal_nominal_m3h || ''} onChange={(e) => setFormData({ ...formData, caudal_nominal_m3h: e.target.value ? parseFloat(e.target.value) : 0 })} /></Grid>
                   <Grid item xs={6}><TextField fullWidth type="number" label="Potencia kW (Opcional)" value={formData.potencia_kw || ''} onChange={(e) => setFormData({ ...formData, potencia_kw: e.target.value ? parseFloat(e.target.value) : 0 })} /></Grid>
                   <Grid item xs={12}><TextField fullWidth label="Motor Info (Opcional - Ej. 75 HP 440V)" value={formData.motor_info || ''} onChange={(e) => setFormData({ ...formData, motor_info: e.target.value })} /></Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ color: '#ef4444', fontWeight: 700, mt: 2, mb: 1 }}>Configuración de Límites de Alarma para esta Bomba</Typography>
+                  </Grid>
+                  <Grid item xs={6}><TextField fullWidth type="number" label="Temp. Máxima Motor (°C)" value={formData.temp_max_c || '80.0'} onChange={(e) => setFormData({ ...formData, temp_max_c: e.target.value })} /></Grid>
+                  <Grid item xs={6}><TextField fullWidth type="number" label="Corriente Máxima (A)" value={formData.corriente_max_a || '45.0'} onChange={(e) => setFormData({ ...formData, corriente_max_a: e.target.value })} /></Grid>
+                  <Grid item xs={6}><TextField fullWidth type="number" label="Presión Succión Máx (inHg)" value={formData.presion_suc_max_inhg || '30.0'} onChange={(e) => setFormData({ ...formData, presion_suc_max_inhg: e.target.value })} /></Grid>
+                  <Grid item xs={6}><TextField fullWidth type="number" label="Presión Succión Mín (inHg)" value={formData.presion_suc_min_inhg || '-10.0'} onChange={(e) => setFormData({ ...formData, presion_suc_min_inhg: e.target.value })} /></Grid>
+                  <Grid item xs={6}><TextField fullWidth type="number" label="Presión Descarga Máx (psi)" value={formData.presion_desc_max_psi || '150.0'} onChange={(e) => setFormData({ ...formData, presion_desc_max_psi: e.target.value })} /></Grid>
+                  <Grid item xs={6}><TextField fullWidth type="number" label="Presión Descarga Mín (psi)" value={formData.presion_desc_min_psi || '20.0'} onChange={(e) => setFormData({ ...formData, presion_desc_min_psi: e.target.value })} /></Grid>
                 </>
               )}
 

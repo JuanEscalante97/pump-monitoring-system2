@@ -190,7 +190,6 @@ export const Dashboard: React.FC = () => {
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           operationId={pidData.active_operation.id}
-          pumps={pidData.active_operation.pumps}
           selectedPumpId={selectedPumpId}
           onSuccess={loadDashboardData}
         />

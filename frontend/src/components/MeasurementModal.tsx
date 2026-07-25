@@ -22,7 +22,6 @@ interface MeasurementModalProps {
   open: boolean;
   onClose: () => void;
   operationId: number;
-  pumps: Pump[];
   selectedPumpId?: number;
   onSuccess: () => void;
 }
@@ -31,11 +30,11 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
   open,
   onClose,
   operationId,
-  pumps,
   selectedPumpId,
   onSuccess,
 }) => {
-  const [bombaId, setBombaId] = useState<number>(selectedPumpId || (pumps[0]?.id || 0));
+  const [pumps, setPumps] = useState<Pump[]>([]);
+  const [bombaId, setBombaId] = useState<number>(selectedPumpId || 0);
   const [presionSuccion, setPresionSuccion] = useState<string>('4.5');
   const [presionDescarga, setPresionDescarga] = useState<string>('85.0');
   const [temperatura, setTemperatura] = useState<string>('68.0');
@@ -49,9 +48,18 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
   const [alarmWarning, setAlarmWarning] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (selectedPumpId) setBombaId(selectedPumpId);
-    else if (pumps.length > 0) setBombaId(pumps[0].id);
-  }, [selectedPumpId, pumps]);
+    const fetchPumps = async () => {
+      try {
+        const res = await api.get('/pumps');
+        setPumps(res.data);
+        if (selectedPumpId) setBombaId(selectedPumpId);
+        else if (res.data.length > 0 && !bombaId) setBombaId(res.data[0].id);
+      } catch (err) {
+        console.error('Error fetching pumps', err);
+      }
+    };
+    if (open) fetchPumps();
+  }, [open, selectedPumpId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

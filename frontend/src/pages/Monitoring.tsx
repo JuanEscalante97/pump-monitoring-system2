@@ -200,7 +200,6 @@ export const Monitoring: React.FC = () => {
             open={modalOpen}
             onClose={() => setModalOpen(false)}
             operationId={activeOp.id}
-            pumps={activeOp.pumps}
             onSuccess={loadMonitoringData}
           />
         </Box>

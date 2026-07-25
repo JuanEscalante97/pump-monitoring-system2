@@ -25,16 +25,6 @@ export const Alarms: React.FC = () => {
   const [events, setEvents] = useState<AlarmEvent[]>([]);
   const [thresholds, setThresholds] = useState<AlarmThreshold[]>([]);
   const [pumps, setPumps] = useState<Pump[]>([]);
-  const [selectedPumpId, setSelectedPumpId] = useState<number | ''>('');
-  const [tempMax, setTempMax] = useState('80.0');
-  const [currMax, setCurrMax] = useState('45.0');
-  const [pSucMin, setPSucMin] = useState('-10.0');
-  const [pSucMax, setPSucMax] = useState('30.0');
-  const [pDescMin, setPDescMin] = useState('20.0');
-  const [pDescMax, setPDescMax] = useState('150.0');
-
-  const [saving, setSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const loadAlarmsData = async () => {
     try {
@@ -45,77 +35,14 @@ export const Alarms: React.FC = () => {
       ]);
 
       setEvents(evRes.data);
-      setThresholds(thRes.data);
-      setPumps(pRes.data);
-
-      applyThresholdToForm(thRes.data, selectedPumpId);
     } catch (err) {
       console.error('Error al cargar alarmas:', err);
-    }
-  };
-
-  const applyThresholdToForm = (allThresholds: AlarmThreshold[], pumpId: number | '') => {
-    const th = allThresholds.find(t => (pumpId === '' ? t.bomba_id === null : t.bomba_id === pumpId));
-    if (th) {
-      setTempMax(String(th.temp_max_c));
-      setCurrMax(String(th.corriente_max_a));
-      setPSucMin(String(th.presion_suc_min_inhg));
-      setPSucMax(String(th.presion_suc_max_inhg));
-      setPDescMin(String(th.presion_desc_min_psi));
-      setPDescMax(String(th.presion_desc_max_psi));
-    } else if (pumpId !== '') {
-      // If no specific threshold for pump, load global fallback
-      const globalTh = allThresholds.find(t => t.bomba_id === null);
-      if (globalTh) {
-        setTempMax(String(globalTh.temp_max_c));
-        setCurrMax(String(globalTh.corriente_max_a));
-        setPSucMin(String(globalTh.presion_suc_min_inhg));
-        setPSucMax(String(globalTh.presion_suc_max_inhg));
-        setPDescMin(String(globalTh.presion_desc_min_psi));
-        setPDescMax(String(globalTh.presion_desc_max_psi));
-      } else {
-        // Fallbacks
-        setTempMax('80.0'); setCurrMax('45.0');
-        setPSucMin('-10.0'); setPSucMax('30.0');
-        setPDescMin('20.0'); setPDescMax('150.0');
-      }
     }
   };
 
   useEffect(() => {
     loadAlarmsData();
   }, []);
-
-  useEffect(() => {
-    applyThresholdToForm(thresholds, selectedPumpId);
-  }, [selectedPumpId]);
-
-  const handleSaveThresholds = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setSaveSuccess(false);
-
-    try {
-      await api.post('/alarms/thresholds', {
-        bomba_id: selectedPumpId === '' ? null : selectedPumpId,
-        temp_max_c: parseFloat(tempMax),
-        corriente_max_a: parseFloat(currMax),
-        presion_suc_min_inhg: parseFloat(pSucMin),
-        presion_suc_max_inhg: parseFloat(pSucMax),
-        presion_desc_min_psi: parseFloat(pDescMin),
-        presion_desc_max_psi: parseFloat(pDescMax),
-        is_active: true,
-      });
-
-      setSaveSuccess(true);
-      loadAlarmsData();
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      console.error('Error al guardar umbrales:', err);
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleAcknowledge = async (id: number) => {
     try {
@@ -142,80 +69,12 @@ export const Alarms: React.FC = () => {
     <Box>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700 }}>
-          CONFIGURACIÓN DE ALARMAS Y EVENTOS CRÍTICOS
+          HISTORIAL DE ALARMAS
         </Typography>
         <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-          Defina límites editables de operación segura. Al excederse los umbrales se disparará una alerta roja e historial de evento.
+          Visualice el registro histórico de eventos de alarma disparados por el sistema de monitoreo.
         </Typography>
       </Box>
-
-      {/* Threshold Configuration Panel */}
-      <Paper sx={{ p: 3, mb: 4, backgroundColor: '#0f172a', borderRadius: 3, borderLeft: '4px solid #ef4444' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" sx={{ color: '#f8fafc', fontWeight: 700 }}>
-            Límites Editables de Alarma
-          </Typography>
-          <TextField
-            select
-            size="small"
-            value={selectedPumpId}
-            onChange={(e) => setSelectedPumpId(e.target.value === '' ? '' : Number(e.target.value))}
-            SelectProps={{ native: true }}
-            sx={{ minWidth: 250, backgroundColor: '#1e293b', borderRadius: 1 }}
-          >
-            <option value="">Límites Globales (Por defecto)</option>
-            {pumps.map(p => (
-              <option key={p.id} value={p.id}>Específico: {p.codigo} - {p.nombre}</option>
-            ))}
-          </TextField>
-        </Box>
-
-        {saveSuccess && <Alert severity="success" sx={{ mb: 2 }}>Umbrales de seguridad actualizados exitosamente.</Alert>}
-
-        <form onSubmit={handleSaveThresholds}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                label="Temp. Máxima Motor (°C)"
-                value={tempMax}
-                onChange={(e) => setTempMax(e.target.value)}
-                helperText="Defecto: 80.0°C"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                label="Corriente Máxima (A)"
-                value={currMax}
-                onChange={(e) => setCurrMax(e.target.value)}
-                helperText="Defecto: 45.0 A"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                label="Presión Succión Máx (inHg)"
-                value={pSucMax}
-                onChange={(e) => setPSucMax(e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                label="Presión Descarga Máx (psi)"
-                value={pDescMax}
-                onChange={(e) => setPDescMax(e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-              <Button type="submit" variant="contained" color="error" disabled={saving} startIcon={<Save size={18} />}>
-                {saving ? 'Guardando...' : 'Guardar Nuevos Umbrales'}
-              </Button>
-            </Grid>
-          </Grid>
-        </form>
-      </Paper>
 
       {/* Alarm Events Table */}
       <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3 }}>

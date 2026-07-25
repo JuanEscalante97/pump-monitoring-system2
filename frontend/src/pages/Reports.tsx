@@ -11,16 +11,23 @@ import {
   Button,
   Chip,
   TableContainer,
+  IconButton,
 } from '@mui/material';
-import { FileText, FileSpreadsheet, Download } from 'lucide-react';
+import { FileText, FileSpreadsheet, Download, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { Operation } from '../types';
 
 export const Reports: React.FC = () => {
+  const { user } = useAuth();
   const [operations, setOperations] = useState<Operation[]>([]);
 
-  useEffect(() => {
+  const loadOperations = () => {
     api.get('/operations').then((res) => setOperations(res.data));
+  };
+
+  useEffect(() => {
+    loadOperations();
   }, []);
 
   const downloadFile = async (url: string, filename: string) => {
@@ -44,6 +51,18 @@ export const Reports: React.FC = () => {
 
   const handleDownloadExcel = (opId: number, opCode: string) => {
     downloadFile(`/reports/operation/${opId}/excel`, `Reporte_${opCode}.xlsx`);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm('¿Está seguro que desea eliminar este reporte/operación? Esta acción es irreversible.')) {
+      try {
+        await api.delete(`/operations/${id}`);
+        loadOperations();
+      } catch (err) {
+        console.error('Error al eliminar operación', err);
+        alert('Error al eliminar el reporte.');
+      }
+    }
   };
 
   return (
@@ -104,6 +123,11 @@ export const Reports: React.FC = () => {
                       >
                         Excel
                       </Button>
+                      {user?.role === 'Administrador' && (
+                        <IconButton size="small" color="error" onClick={() => handleDelete(op.id)}>
+                          <Trash2 size={18} />
+                        </IconButton>
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>
