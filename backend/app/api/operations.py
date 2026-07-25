@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.database.session import get_db
-from app.models.models import Operation, Tank, Pump, Vessel, Product, User, ScheduledInspection
+from app.models.models import Operation, Tank, Pump, Vessel, Product, User, ScheduledInspection, Measurement
 from app.schemas.schemas import OperationCreate, OperationResponse, TankResponse, PumpResponse
 from app.core.security import get_current_user
 from app.core.audit import log_audit_action, get_client_ip
@@ -27,6 +27,8 @@ def list_operations(
     results = []
     for op in operations:
         op_dict = OperationResponse.model_validate(op).model_dump()
+        dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
+        dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
         all_tanks = {t.id: t for t in (list(op.tanks) + dynamic_tanks)}.values()
         all_pumps = {p.id: p for p in (list(op.pumps) + dynamic_pumps)}.values()
         op_dict["tanks"] = [TankResponse.model_validate(t).model_dump() for t in all_tanks]
@@ -54,6 +56,8 @@ def get_active_operation(
         return None
     
     op_dict = OperationResponse.model_validate(op).model_dump()
+    dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
+    dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
     all_tanks = {t.id: t for t in (list(op.tanks) + dynamic_tanks)}.values()
     all_pumps = {p.id: p for p in (list(op.pumps) + dynamic_pumps)}.values()
     op_dict["tanks"] = [TankResponse.model_validate(t).model_dump() for t in all_tanks]

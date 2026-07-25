@@ -302,119 +302,165 @@ export const Operations: React.FC = () => {
       </Paper>
 
       {/* New Operation Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { backgroundColor: '#0f172a' } }}>
-        <DialogTitle sx={{ color: '#f8fafc', fontWeight: 700 }}>Iniciar Nueva Operación de Bombeo</DialogTitle>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth PaperProps={{ sx: { backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 3 } }}>
+        <DialogTitle sx={{ color: '#f8fafc', fontWeight: 700, pb: 1, borderBottom: '1px solid #1e293b' }}>
+          Iniciar Nueva Operación de Bombeo
+        </DialogTitle>
         <form onSubmit={handleCreateOperation}>
-          <DialogContent>
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          <DialogContent sx={{ py: 3 }}>
+            {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-            <Grid container spacing={2.5}>
+            <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth required>
-                  <InputLabel shrink sx={{ backgroundColor: '#0f172a', px: 0.5, color: '#94a3b8' }}>Buque Destino</InputLabel>
-                  <Select
-                    displayEmpty
+                <Box>
+                  <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, mb: 0.8, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Buque Destino *
+                  </Typography>
+                  <TextField
+                    select
+                    fullWidth
+                    required
                     value={selectedVessel}
-                    label="Buque Destino"
                     onChange={(e) => setSelectedVessel(Number(e.target.value))}
-                    sx={{ mt: 0.5 }}
+                    SelectProps={{ native: true }}
+                    hiddenLabel
+                    sx={{
+                      backgroundColor: '#1e293b',
+                      borderRadius: 1,
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#334155' },
+                    }}
                   >
-                    <MenuItem value="" disabled><em>Seleccionar Buque...</em></MenuItem>
+                    <option value="" disabled style={{ color: '#64748b' }}>-- Seleccionar Buque --</option>
                     {vessels.map((v) => (
-                      <MenuItem key={v.id} value={v.id}>{v.nombre} ({v.empresa})</MenuItem>
+                      <option key={v.id} value={v.id} style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>
+                        {v.nombre} ({v.empresa})
+                      </option>
                     ))}
-                  </Select>
-                </FormControl>
+                  </TextField>
+                </Box>
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth required>
-                  <InputLabel shrink sx={{ backgroundColor: '#0f172a', px: 0.5, color: '#94a3b8' }}>Producto a Transferir</InputLabel>
-                  <Select
-                    displayEmpty
+                <Box>
+                  <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, mb: 0.8, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Producto a Transferir *
+                  </Typography>
+                  <TextField
+                    select
+                    fullWidth
+                    required
                     value={selectedProduct}
-                    label="Producto a Transferir"
                     onChange={(e) => setSelectedProduct(Number(e.target.value))}
-                    sx={{ mt: 0.5 }}
+                    SelectProps={{ native: true }}
+                    hiddenLabel
+                    sx={{
+                      backgroundColor: '#1e293b',
+                      borderRadius: 1,
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#334155' },
+                    }}
                   >
-                    <MenuItem value="" disabled><em>Seleccionar Producto...</em></MenuItem>
+                    <option value="" disabled style={{ color: '#64748b' }}>-- Seleccionar Producto --</option>
                     {products.map((p) => (
-                      <MenuItem key={p.id} value={p.id}>{p.nombre}</MenuItem>
+                      <option key={p.id} value={p.id} style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>
+                        {p.nombre}
+                      </option>
                     ))}
-                  </Select>
-                </FormControl>
+                  </TextField>
+                </Box>
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel shrink sx={{ backgroundColor: '#0f172a', px: 0.5, color: '#94a3b8' }}>Bombas Habilitadas</InputLabel>
-                  <Select
-                    multiple
-                    displayEmpty
-                    value={selectedPumps}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSelectedPumps(typeof val === 'string' ? val.split(',').map(Number) : val);
-                    }}
-                    renderValue={(selected) => {
-                      if (selected.length === 0) return <em style={{ color: '#64748b' }}>Seleccionar Bombas...</em>;
-                      return selected.map(id => pumps.find(p => p.id === id)?.codigo || id).join(', ');
-                    }}
-                    sx={{ mt: 0.5 }}
-                  >
-                    {pumps.map((p) => (
-                      <MenuItem key={p.id} value={p.id}>
-                        <Checkbox checked={selectedPumps.indexOf(p.id) > -1} color="primary" />
-                        <ListItemText primary={`${p.codigo}`} secondary={`${p.marca} ${p.modelo}`} />
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Box>
+                  <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, mb: 0.8, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Bombas Habilitadas (Haz clic para activar)
+                  </Typography>
+                  <Paper sx={{ p: 1.5, backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 1.5, minHeight: 70, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+                    {pumps.map(p => {
+                      const isSelected = selectedPumps.includes(p.id);
+                      return (
+                        <Chip
+                          key={p.id}
+                          label={`${p.codigo}`}
+                          onClick={() => {
+                            setSelectedPumps(prev => isSelected ? prev.filter(id => id !== p.id) : [...prev, p.id]);
+                          }}
+                          color={isSelected ? "primary" : "default"}
+                          variant={isSelected ? "filled" : "outlined"}
+                          sx={{
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            borderColor: isSelected ? '#3b82f6' : '#475569',
+                            color: isSelected ? '#ffffff' : '#cbd5e1',
+                            px: 0.5
+                          }}
+                        />
+                      );
+                    })}
+                    {pumps.length === 0 && <Typography variant="caption" sx={{ color: '#64748b', fontStyle: 'italic' }}>No hay bombas registradas en el catálogo</Typography>}
+                  </Paper>
+                </Box>
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel shrink sx={{ backgroundColor: '#0f172a', px: 0.5, color: '#94a3b8' }}>Tanques Habilitados</InputLabel>
-                  <Select
-                    multiple
-                    displayEmpty
-                    value={selectedTanks}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSelectedTanks(typeof val === 'string' ? val.split(',').map(Number) : val);
-                    }}
-                    renderValue={(selected) => {
-                      if (selected.length === 0) return <em style={{ color: '#64748b' }}>Seleccionar Tanques...</em>;
-                      return selected.map(id => tanks.find(t => t.id === id)?.codigo || id).join(', ');
-                    }}
-                    sx={{ mt: 0.5 }}
-                  >
-                    {tanks.map((t) => (
-                      <MenuItem key={t.id} value={t.id}>
-                        <Checkbox checked={selectedTanks.indexOf(t.id) > -1} color="primary" />
-                        <ListItemText primary={t.codigo} secondary={t.producto?.nombre} />
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Box>
+                  <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, mb: 0.8, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Tanques Habilitados (Haz clic para activar)
+                  </Typography>
+                  <Paper sx={{ p: 1.5, backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 1.5, minHeight: 70, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+                    {tanks.map(t => {
+                      const isSelected = selectedTanks.includes(t.id);
+                      return (
+                        <Chip
+                          key={t.id}
+                          label={`${t.codigo} (${t.producto?.nombre || 'General'})`}
+                          onClick={() => {
+                            setSelectedTanks(prev => isSelected ? prev.filter(id => id !== t.id) : [...prev, t.id]);
+                          }}
+                          color={isSelected ? "info" : "default"}
+                          variant={isSelected ? "filled" : "outlined"}
+                          sx={{
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            borderColor: isSelected ? '#06b6d4' : '#475569',
+                            color: isSelected ? '#ffffff' : '#cbd5e1',
+                            px: 0.5
+                          }}
+                        />
+                      );
+                    })}
+                    {tanks.length === 0 && <Typography variant="caption" sx={{ color: '#64748b', fontStyle: 'italic' }}>No hay tanques registrados en el catálogo</Typography>}
+                  </Paper>
+                </Box>
               </Grid>
 
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={2}
-                  label="Observaciones Iniciales"
-                  value={observaciones}
-                  onChange={(e) => setObservaciones(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                />
+                <Box>
+                  <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, mb: 0.8, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Observaciones Iniciales (Opcional)
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={2}
+                    placeholder="Escribe comentarios u observaciones aquí..."
+                    value={observaciones}
+                    onChange={(e) => setObservaciones(e.target.value)}
+                    hiddenLabel
+                    sx={{
+                      backgroundColor: '#1e293b',
+                      borderRadius: 1,
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#334155' },
+                    }}
+                  />
+                </Box>
               </Grid>
             </Grid>
           </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button onClick={() => { setDialogOpen(false); setError(null); }}>Cancelar</Button>
-            <Button type="submit" variant="contained" disabled={loading}>
+          <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid #1e293b' }}>
+            <Button onClick={() => { setDialogOpen(false); setError(null); }} sx={{ color: '#94a3b8' }}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="contained" disabled={loading} sx={{ fontWeight: 700, px: 3 }}>
               Iniciar Operación
             </Button>
           </DialogActions>
