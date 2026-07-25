@@ -26,14 +26,14 @@ def list_operations(
     # Dynamically inject tanks and pumps based on measurements (since we decoupled them from operation creation)
     results = []
     for op in operations:
-        op_dict = OperationResponse.model_validate(op).model_dump()
+        op_resp = OperationResponse.model_validate(op)
         dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
         dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
         all_tanks = {t.id: t for t in (list(op.tanks) + dynamic_tanks)}.values()
         all_pumps = {p.id: p for p in (list(op.pumps) + dynamic_pumps)}.values()
-        op_dict["tanks"] = [TankResponse.model_validate(t).model_dump() for t in all_tanks]
-        op_dict["pumps"] = [PumpResponse.model_validate(p).model_dump() for p in all_pumps]
-        results.append(op_dict)
+        op_resp.tanks = [TankResponse.model_validate(t) for t in all_tanks]
+        op_resp.pumps = [PumpResponse.model_validate(p) for p in all_pumps]
+        results.append(op_resp)
         
     return results
 
@@ -55,14 +55,14 @@ def get_active_operation(
     if not op:
         return None
     
-    op_dict = OperationResponse.model_validate(op).model_dump()
+    op_resp = OperationResponse.model_validate(op)
     dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
     dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
     all_tanks = {t.id: t for t in (list(op.tanks) + dynamic_tanks)}.values()
     all_pumps = {p.id: p for p in (list(op.pumps) + dynamic_pumps)}.values()
-    op_dict["tanks"] = [TankResponse.model_validate(t).model_dump() for t in all_tanks]
-    op_dict["pumps"] = [PumpResponse.model_validate(p).model_dump() for p in all_pumps]
-    return op_dict
+    op_resp.tanks = [TankResponse.model_validate(t) for t in all_tanks]
+    op_resp.pumps = [PumpResponse.model_validate(p) for p in all_pumps]
+    return op_resp
 
 @router.post("", response_model=OperationResponse, status_code=status.HTTP_201_CREATED)
 def create_operation(

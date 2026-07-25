@@ -17,17 +17,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Checkbox,
-  ListItemText,
   TableContainer,
 } from '@mui/material';
-import { Activity, Plus, ShieldAlert, FileText, CheckCircle2, Square, AlertTriangle, Trash2 } from 'lucide-react';
+import { Plus, Square, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
-import { Operation, Pump, Tank, Vessel, Product } from '../types';
+import { Operation, Vessel, Product } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -35,16 +30,12 @@ export const Operations: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [operations, setOperations] = useState<Operation[]>([]);
-  const [pumps, setPumps] = useState<Pump[]>([]);
-  const [tanks, setTanks] = useState<Tank[]>([]);
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedVessel, setSelectedVessel] = useState<number | ''>('');
   const [selectedProduct, setSelectedProduct] = useState<number | ''>('');
-  const [selectedTanks, setSelectedTanks] = useState<number[]>([]);
-  const [selectedPumps, setSelectedPumps] = useState<number[]>([]);
   const [observaciones, setObservaciones] = useState<string>('');
 
   const [loading, setLoading] = useState(false);
@@ -53,17 +44,13 @@ export const Operations: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [opRes, pRes, tRes, vRes, prRes] = await Promise.all([
+      const [opRes, vRes, prRes] = await Promise.all([
         api.get('/operations'),
-        api.get('/pumps'),
-        api.get('/tanks'),
         api.get('/vessels'),
         api.get('/products'),
       ]);
 
       setOperations(opRes.data);
-      setPumps(pRes.data);
-      setTanks(tRes.data);
       setVessels(vRes.data);
       setProducts(prRes.data);
       setSelectedIds([]);
@@ -85,15 +72,13 @@ export const Operations: React.FC = () => {
       await api.post('/operations', {
         buque_id: Number(selectedVessel),
         producto_id: Number(selectedProduct),
-        tank_ids: selectedTanks,
-        pump_ids: selectedPumps,
+        tank_ids: [],
+        pump_ids: [],
         observaciones,
       });
 
       setSelectedVessel('');
       setSelectedProduct('');
-      setSelectedTanks([]);
-      setSelectedPumps([]);
       setObservaciones('');
       setDialogOpen(false);
       await loadData();
@@ -188,8 +173,6 @@ export const Operations: React.FC = () => {
             onClick={() => {
               setSelectedVessel('');
               setSelectedProduct('');
-              setSelectedTanks([]);
-              setSelectedPumps([]);
               setObservaciones('');
               setError(null);
               setDialogOpen(true);
@@ -302,7 +285,7 @@ export const Operations: React.FC = () => {
       </Paper>
 
       {/* New Operation Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth PaperProps={{ sx: { backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 3 } }}>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 3 } }}>
         <DialogTitle sx={{ color: '#f8fafc', fontWeight: 700, pb: 1, borderBottom: '1px solid #1e293b' }}>
           Iniciar Nueva Operación de Bombeo
         </DialogTitle>
@@ -311,7 +294,7 @@ export const Operations: React.FC = () => {
             {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <Box>
                   <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, mb: 0.8, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     Buque Destino *
@@ -330,7 +313,7 @@ export const Operations: React.FC = () => {
                       '& .MuiOutlinedInput-notchedOutline': { borderColor: '#334155' },
                     }}
                   >
-                    <option value="" disabled style={{ color: '#64748b' }}>-- Seleccionar Buque --</option>
+                    <option value="" disabled style={{ color: '#64748b' }}>-- Selecciona el buque receptor --</option>
                     {vessels.map((v) => (
                       <option key={v.id} value={v.id} style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>
                         {v.nombre} ({v.empresa})
@@ -340,7 +323,7 @@ export const Operations: React.FC = () => {
                 </Box>
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <Box>
                   <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, mb: 0.8, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     Producto a Transferir *
@@ -359,77 +342,13 @@ export const Operations: React.FC = () => {
                       '& .MuiOutlinedInput-notchedOutline': { borderColor: '#334155' },
                     }}
                   >
-                    <option value="" disabled style={{ color: '#64748b' }}>-- Seleccionar Producto --</option>
+                    <option value="" disabled style={{ color: '#64748b' }}>-- Selecciona el producto marino --</option>
                     {products.map((p) => (
                       <option key={p.id} value={p.id} style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>
                         {p.nombre}
                       </option>
                     ))}
                   </TextField>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, mb: 0.8, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    Bombas Habilitadas (Haz clic para activar)
-                  </Typography>
-                  <Paper sx={{ p: 1.5, backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 1.5, minHeight: 70, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-                    {pumps.map(p => {
-                      const isSelected = selectedPumps.includes(p.id);
-                      return (
-                        <Chip
-                          key={p.id}
-                          label={`${p.codigo}`}
-                          onClick={() => {
-                            setSelectedPumps(prev => isSelected ? prev.filter(id => id !== p.id) : [...prev, p.id]);
-                          }}
-                          color={isSelected ? "primary" : "default"}
-                          variant={isSelected ? "filled" : "outlined"}
-                          sx={{
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            borderColor: isSelected ? '#3b82f6' : '#475569',
-                            color: isSelected ? '#ffffff' : '#cbd5e1',
-                            px: 0.5
-                          }}
-                        />
-                      );
-                    })}
-                    {pumps.length === 0 && <Typography variant="caption" sx={{ color: '#64748b', fontStyle: 'italic' }}>No hay bombas registradas en el catálogo</Typography>}
-                  </Paper>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, mb: 0.8, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    Tanques Habilitados (Haz clic para activar)
-                  </Typography>
-                  <Paper sx={{ p: 1.5, backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 1.5, minHeight: 70, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-                    {tanks.map(t => {
-                      const isSelected = selectedTanks.includes(t.id);
-                      return (
-                        <Chip
-                          key={t.id}
-                          label={`${t.codigo} (${t.producto?.nombre || 'General'})`}
-                          onClick={() => {
-                            setSelectedTanks(prev => isSelected ? prev.filter(id => id !== t.id) : [...prev, t.id]);
-                          }}
-                          color={isSelected ? "info" : "default"}
-                          variant={isSelected ? "filled" : "outlined"}
-                          sx={{
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            borderColor: isSelected ? '#06b6d4' : '#475569',
-                            color: isSelected ? '#ffffff' : '#cbd5e1',
-                            px: 0.5
-                          }}
-                        />
-                      );
-                    })}
-                    {tanks.length === 0 && <Typography variant="caption" sx={{ color: '#64748b', fontStyle: 'italic' }}>No hay tanques registrados en el catálogo</Typography>}
-                  </Paper>
                 </Box>
               </Grid>
 
