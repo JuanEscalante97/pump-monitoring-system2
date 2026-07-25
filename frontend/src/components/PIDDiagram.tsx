@@ -31,7 +31,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Typography variant="h5" sx={{ color: '#f8fafc', fontWeight: 700, fontFamily: 'Chakra Petch' }}>
-              PANEL DE CONTROL - LÍNEA DE EMBARQUE
+              PANEL DE CONTROL - EMBARQUE
             </Typography>
             <Chip
               label={isOpActive ? `OPERACIÓN ACTIVA` : 'SIN OPERACIÓN ACTIVA'}
@@ -41,7 +41,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
             />
           </Box>
           <Typography variant="body2" sx={{ color: '#94a3b8', mt: 0.5 }}>
-            Monitoreo en tiempo real de Tanques, Bombas Centrífugas y Buque Tanquero. Haga clic en una bomba para registrar lectura.
+            Monitoreo en tiempo real de Tanques, Bombas Centrífugas y Nave. Haga clic en una bomba para registrar lectura.
           </Typography>
         </Box>
 
