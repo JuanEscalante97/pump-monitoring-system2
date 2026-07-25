@@ -44,7 +44,7 @@ const menuItems = [
   { text: 'Operaciones', path: '/operations', icon: <Ship size={20} /> },
   { text: 'Registro de Monitoreo', path: '/monitoring', icon: <Activity size={20} /> },
   { text: 'Historial', path: '/history', icon: <History size={20} /> },
-  { text: 'Alarmas & Umbrales', path: '/alarms', icon: <ShieldAlert size={20} /> },
+  { text: 'Alarmas y Umbrales', path: '/alarms', icon: <ShieldAlert size={20} /> },
   { text: 'Catálogos', path: '/catalogs', icon: <Database size={20} /> },
   { text: 'Reportes PDF / Excel', path: '/reports', icon: <FileSpreadsheet size={20} /> },
   { text: 'Auditoría', path: '/audit', icon: <FileCheck size={20} /> },
@@ -98,7 +98,7 @@ export const Layout: React.FC = () => {
             MONITOREO DE BOMBAS
           </Typography>
           <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 600, letterSpacing: 0.5 }}>
-            TERMINAL DE LIQUIDOS TRAMARSA - ILO
+            TERMINAL DE LÍQUIDOS TRAMARSA - ILO
           </Typography>
         </Box>
       </Box>

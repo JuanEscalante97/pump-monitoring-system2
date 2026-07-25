@@ -35,6 +35,8 @@ export const Alarms: React.FC = () => {
       ]);
 
       setEvents(evRes.data);
+      setThresholds(thRes.data);
+      setPumps(pRes.data);
     } catch (err) {
       console.error('Error al cargar alarmas:', err);
     }
@@ -104,7 +106,12 @@ export const Alarms: React.FC = () => {
                   <TableCell sx={{ color: '#63b3ed', fontWeight: 700 }}>{ev.bomba?.codigo}</TableCell>
                   <TableCell sx={{ color: '#f8fafc', fontWeight: 600 }}>{ev.tipo_alarma}</TableCell>
                   <TableCell>
-                    <Chip label={ev.nivel} color={ev.nivel === 'ALARM' ? 'error' : 'warning'} size="small" sx={{ fontWeight: 700 }} />
+                    <Chip
+                      label={ev.nivel === 'ALARM' ? 'ALARMA' : ev.nivel === 'WARNING' ? 'ADVERTENCIA' : ev.nivel}
+                      color={ev.nivel === 'ALARM' ? 'error' : 'warning'}
+                      size="small"
+                      sx={{ fontWeight: 700 }}
+                    />
                   </TableCell>
                   <TableCell sx={{ color: '#ef4444', fontWeight: 700 }}>{ev.valor_registrado}</TableCell>
                   <TableCell>{ev.limite_umbral}</TableCell>

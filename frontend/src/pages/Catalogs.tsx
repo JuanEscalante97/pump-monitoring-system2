@@ -229,7 +229,7 @@ export const Catalogs: React.FC = () => {
                   <TableCell>{p.motor_info}</TableCell>
                   <TableCell>{p.potencia_kw} kW</TableCell>
                   <TableCell>
-                    <Chip label={p.estado} color={p.estado === 'En Operacion' ? 'primary' : 'success'} size="small" />
+                    <Chip label={p.estado} color={p.estado === 'En Operación' ? 'primary' : 'success'} size="small" />
                   </TableCell>
                   <TableCell align="center">
                     <IconButton size="small" onClick={() => handleEdit('pump', p)} color="primary">
@@ -322,7 +322,6 @@ export const Catalogs: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Nombre del Buque</TableCell>
                 <TableCell>Nombre del Buque</TableCell>
                 <TableCell>Empresa Naviera</TableCell>
                 <TableCell>Observaciones</TableCell>

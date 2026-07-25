@@ -150,7 +150,7 @@ export const Operations: React.FC = () => {
 
       {activeOp && (
         <Alert severity="info" sx={{ mb: 3, backgroundColor: 'rgba(49, 130, 206, 0.15)', border: '1px solid #3182ce' }}>
-          <b>OPERACIÓN ACTIVA EN CURSO ({activeOp.codigo_operacion}):</b> Embarque de {activeOp.producto?.nombre} hacia buque <b>{activeOp.buque?.nombre}</b> con {activeOp.pumps.length} bombas activas.
+          <b>OPERACIÓN ACTIVA EN CURSO ({activeOp.codigo_operacion}):</b> Embarque de {activeOp.producto?.nombre} hacia buque <b>{activeOp.buque?.nombre}</b>. Bombas en operación: {activeOp.pumps.length > 0 ? activeOp.pumps.map(p => p.codigo).join(', ') : 'aún sin lecturas registradas'}.
         </Alert>
       )}
 
@@ -272,7 +272,7 @@ export const Operations: React.FC = () => {
                   fullWidth
                   multiline
                   rows={2}
-                  label="Observaciones Inciales"
+                  label="Observaciones Iniciales"
                   value={observaciones}
                   onChange={(e) => setObservaciones(e.target.value)}
                 />

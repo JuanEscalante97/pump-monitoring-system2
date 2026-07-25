@@ -98,7 +98,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
                     </Box>
                   </Box>
                   <Chip
-                    label={isUsedInOp ? 'EN ENVIÓ' : tank.estado}
+                    label={isUsedInOp ? 'EN ENVÍO' : tank.estado}
                     size="small"
                     sx={{
                       fontSize: '0.7rem',
@@ -144,12 +144,12 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
                 statusBg = 'rgba(239, 68, 68, 0.2)';
                 statusBorder = '#ef4444';
                 statusIcon = <AlertTriangle size={18} color="#ef4444" />;
-                statusText = '🔴 EN OPERACIÓN';
+                statusText = '🔴 EN ALARMA';
               } else if (status_indicator === 'WARNING') {
                 statusBg = 'rgba(245, 158, 11, 0.15)';
                 statusBorder = '#f59e0b';
                 statusIcon = <AlertTriangle size={18} color="#f59e0b" />;
-                statusText = '🟡 EN OPERACIÓN';
+                statusText = '🟡 CON ADVERTENCIA';
               }
 
               return (
@@ -270,7 +270,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
         {/* STEP 3: VESSEL DESTINATION */}
         <Grid item xs={12} md={2}>
           <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: 1, mb: 2 }}>
-             NAVE
+             BUQUE DESTINO
           </Typography>
           <Paper
             sx={{

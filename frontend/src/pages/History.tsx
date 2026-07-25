@@ -134,7 +134,7 @@ export const History: React.FC = () => {
           HISTORIAL DE REGISTROS DE MONITOREO
         </Typography>
         <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-          Consulte la trazabilidad histórica. Los registros no se pueden borrar; solo se permite corregir conservando la auditoría.
+          Consulte la trazabilidad histórica de todas las lecturas. Las correcciones conservan la auditoría completa; solo el Administrador puede eliminar registros.
         </Typography>
       </Box>
 

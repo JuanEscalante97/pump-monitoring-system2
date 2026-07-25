@@ -258,7 +258,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
                 multiline
                 rows={2}
                 label="Observaciones del Inspector"
-                placeholder="Indique ruído inusual, fuga leve, condición del sello, etc."
+                placeholder="Indique ruido inusual, fuga leve, condición del sello mecánico, etc."
                 value={observaciones}
                 onChange={(e) => setObservaciones(e.target.value)}
               />

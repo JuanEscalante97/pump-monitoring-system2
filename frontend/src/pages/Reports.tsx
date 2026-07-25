@@ -54,7 +54,7 @@ export const Reports: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('¿Está seguro que desea eliminar este reporte/operación? Esta acción es irreversible.')) {
+    if (window.confirm('ATENCIÓN: ¿Está seguro que desea eliminar esta operación y TODAS sus lecturas de monitoreo asociadas? Esta acción es irreversible y elimina tanto el reporte como todos los datos de medición.')) {
       try {
         await api.delete(`/operations/${id}`);
         loadOperations();
