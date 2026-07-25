@@ -69,7 +69,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
         <Grid item xs={12} md={3}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: 1 }}>
-              1. TANQUES DE ALMACENAMIENTO
+               TANQUES DE ALMACENAMIENTO
             </Typography>
             {(data.tanks || []).map((tank) => {
               const isUsedInOp = activeOp?.tanks?.some((t) => t.id === tank.id);
@@ -131,7 +131,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
         {/* STEP 2: PUMPS AREA */}
         <Grid item xs={12} md={5}>
           <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: 1, mb: 2 }}>
-            2. BOMBAS CENTRÍFUGAS DE EMBARQUE
+             BOMBAS CENTRÍFUGAS DE EMBARQUE
           </Typography>
           <Grid container spacing={2}>
             {(data.pumps_status || []).map(({ pump, last_measurement, status_indicator, active_alarms_count }) => {
@@ -270,7 +270,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
         {/* STEP 3: VESSEL DESTINATION */}
         <Grid item xs={12} md={2}>
           <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: 1, mb: 2 }}>
-            3. DESTINO (BUQUE)
+             NAVE
           </Typography>
           <Paper
             sx={{
@@ -286,10 +286,10 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
               {data.vessel?.nombre || 'Sin Asignar'}
             </Typography>
             <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block', mt: 0.5 }}>
-              {data.vessel?.empresa || 'Empresa Naviera'}
+              {data.vessel?.empresa || ''}
             </Typography>
             <Chip
-              label={isOpActive ? 'RECIBIENDO RECURSO' : 'ESPERANDO AMARRE'}
+              label={isOpActive ? 'EMBARCANDO' : 'ESPERANDO'}
               color={isOpActive ? 'info' : 'default'}
               size="small"
               sx={{ mt: 1.5, fontWeight: 700 }}
