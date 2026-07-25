@@ -86,14 +86,12 @@ export const Monitoring: React.FC = () => {
     const pSucc = m.presion_succion_inhg !== null && m.presion_succion_inhg !== undefined ? `${m.presion_succion_inhg} inHg` : 'N/A';
     const opCode = activeOp?.codigo_operacion || `OP-${m.operation_id}`;
     const buqueName = activeOp?.buque?.nombre || 'Buque en puerto';
-    return `📋 RESUMEN DE REGISTRO TÉCNICO\n` +
-           `🚢 Operación: ${opCode} (${buqueName})\n` +
-           `⚙️ Bomba: ${m.bomba?.codigo || '-'}\n` +
-           `🔩 P. Descarga: ${m.presion_descarga_psi} PSI | P. Succión: ${pSucc}\n` +
-           `🌡️ Temp: ${m.temperatura_c} °C | ⚡ Corriente: ${m.corriente_a} A\n` +
-           `🕒 Fecha/Hora: ${m.fecha_registro.split('-').reverse().join('/')} ${m.hora_registro.substring(0, 5)}\n` +
-           `✅ Estado: ${m.temperatura_c > 80 || m.corriente_a > 45 ? 'CRÍTICO 🚨' : 'NORMAL 🟢'}`;
-  };
+    return ` REPORTE EMBARQUE\n` +
+           ` Nave :  ${opCode} (${buqueName})\n` +
+           ` Bomba en operacion : ${m.bomba?.codigo || '-'}\n` +
+           ` P. Descarga: ${m.presion_descarga_psi} PSI | P. Succión: ${pSucc}\n` +
+           ` Temp: ${m.temperatura_c} °C |  Corriente: ${m.corriente_a} A\n` +
+           };
 
   const handleShareWhatsApp = (m: Measurement) => {
     const text = encodeURIComponent(formatBriefSummary(m));
