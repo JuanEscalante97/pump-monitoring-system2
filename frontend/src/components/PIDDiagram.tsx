@@ -144,12 +144,12 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
                 statusBg = 'rgba(239, 68, 68, 0.2)';
                 statusBorder = '#ef4444';
                 statusIcon = <AlertTriangle size={18} color="#ef4444" />;
-                statusText = '🔴 ALARMA CRÍTICA';
+                statusText = '🔴 EN OPERACIÓN';
               } else if (status_indicator === 'WARNING') {
                 statusBg = 'rgba(245, 158, 11, 0.15)';
                 statusBorder = '#f59e0b';
                 statusIcon = <AlertTriangle size={18} color="#f59e0b" />;
-                statusText = '🟡 ADVERTENCIA';
+                statusText = '🟡 EN OPERACIÓN';
               }
 
               return (

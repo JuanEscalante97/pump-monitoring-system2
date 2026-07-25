@@ -22,7 +22,21 @@ def list_operations(
     query = db.query(Operation)
     if estado:
         query = query.filter(Operation.estado == estado)
-    return query.order_by(Operation.created_at.desc()).all()
+    operations = query.order_by(Operation.created_at.desc()).all()
+
+    # Dynamically inject tanks and pumps based on measurements (since we decoupled them from operation creation)
+    results = []
+    for op in operations:
+        op_dict = OperationResponse.model_validate(op).model_dump()
+        dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
+        dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
+        
+        # Pydantic v2 model_dump returns dict, we need to overwrite tanks/pumps lists
+        op_dict["tanks"] = dynamic_tanks
+        op_dict["pumps"] = dynamic_pumps
+        results.append(op_dict)
+        
+    return results
 
 @router.get("/active", response_model=Optional[OperationResponse])
 def get_active_operation(

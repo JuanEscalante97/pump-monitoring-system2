@@ -57,8 +57,19 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
         ]);
         setPumps(pRes.data);
         setTanks(tRes.data);
-        if (selectedPumpId) setBombaId(selectedPumpId);
-        else if (pRes.data.length > 0 && !bombaId) setBombaId(pRes.data[0].id);
+        
+        if (open) {
+          if (selectedPumpId) setBombaId(selectedPumpId);
+          setTanqueId('');
+          setPresionSuccion('');
+          setPresionDescarga('');
+          setTemperatura('');
+          setCorriente('');
+          setObservaciones('');
+          setError(null);
+          setSaveSuccess(false);
+          setAlarmWarning(null);
+        }
       } catch (err) {
         console.error('Error fetching data', err);
       }

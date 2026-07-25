@@ -40,22 +40,18 @@ def get_dashboard_kpis(
     today_measurements = db.query(Measurement).filter(Measurement.fecha_registro == today).all()
     total_mediciones_hoy = len(today_measurements)
 
-    if today_measurements:
-        temp_prom = sum(m.temperatura_c for m in today_measurements) / total_mediciones_hoy
-        corr_prom = sum(m.corriente_a for m in today_measurements) / total_mediciones_hoy
-        p_suc_prom = sum(m.presion_succion_inhg for m in today_measurements) / total_mediciones_hoy
-        p_desc_prom = sum(m.presion_descarga_psi for m in today_measurements) / total_mediciones_hoy
-    else:
-        # Fallback to all measurements average if none today
-        all_measurements = db.query(Measurement).all()
-        if all_measurements:
-            count = len(all_measurements)
-            temp_prom = sum(m.temperatura_c for m in all_measurements) / count
-            corr_prom = sum(m.corriente_a for m in all_measurements) / count
-            p_suc_prom = sum(m.presion_succion_inhg for m in all_measurements) / count
-            p_desc_prom = sum(m.presion_descarga_psi for m in all_measurements) / count
+    if active_op:
+        active_measurements = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
+        total_mediciones = len(active_measurements)
+        if total_mediciones > 0:
+            temp_prom = sum(m.temperatura_c for m in active_measurements) / total_mediciones
+            corr_prom = sum(m.corriente_a for m in active_measurements) / total_mediciones
+            p_suc_prom = sum(m.presion_succion_inhg for m in active_measurements) / total_mediciones
+            p_desc_prom = sum(m.presion_descarga_psi for m in active_measurements) / total_mediciones
         else:
             temp_prom, corr_prom, p_suc_prom, p_desc_prom = 0.0, 0.0, 0.0, 0.0
+    else:
+        temp_prom, corr_prom, p_suc_prom, p_desc_prom = 0.0, 0.0, 0.0, 0.0
 
     return DashboardKPIs(
         operaciones_activas=operaciones_activas,
