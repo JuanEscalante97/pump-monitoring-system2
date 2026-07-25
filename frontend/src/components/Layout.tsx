@@ -155,11 +155,11 @@ export const Layout: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <Radio size={16} color="#10b981" />
           <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 700 }}>
-            SERVIDOR EN LÍNEA (RELOJ ACTIVO)
+            SERVIDOR EN LÍNEA 
           </Typography>
         </Box>
         <Typography variant="caption" sx={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>
-          Versión Corporativa v1.0.0
+          Versión v1.0.0 | Juan Escalante
         </Typography>
       </Box>
     </Box>
@@ -190,7 +190,7 @@ export const Layout: React.FC = () => {
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" component="div" sx={{ fontWeight: 600, color: '#f8fafc', fontSize: { xs: '0.85rem', sm: '1.1rem' }, lineHeight: 1.2 }}>
-              Monitoreo de Condición de Bombas<br/>TLT-Ilo
+              Monitoreo de Condición de Bombas<br/>TLT-ILO
             </Typography>
 
           </Box>
