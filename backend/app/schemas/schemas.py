@@ -130,8 +130,8 @@ class AlarmThresholdResponse(AlarmThresholdBase):
 class OperationCreate(BaseModel):
     buque_id: int
     producto_id: int
-    tank_ids: List[int]
-    pump_ids: List[int]  # Max 3 pumps
+    tank_ids: List[int] = []
+    pump_ids: List[int] = []
     observaciones: Optional[str] = None
 
 class ScheduledInspectionResponse(BaseModel):

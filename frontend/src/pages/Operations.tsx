@@ -77,24 +77,13 @@ export const Operations: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    if (selectedPumps.length > 3 || selectedPumps.length === 0) {
-      setError('Debe seleccionar entre 1 y hasta un máximo de 3 bombas.');
-      return;
-    }
-
-    if (selectedTanks.length === 0 || selectedTanks.length > 3) {
-      setError('Debe seleccionar entre 1 y hasta un máximo de 3 tanques de origen.');
-      return;
-    }
-
-
     setLoading(true);
     try {
       await api.post('/operations', {
         buque_id: Number(selectedVessel),
         producto_id: Number(selectedProduct),
-        tank_ids: selectedTanks,
-        pump_ids: selectedPumps,
+        tank_ids: [],
+        pump_ids: [],
         observaciones,
       });
 
@@ -315,65 +304,6 @@ export const Operations: React.FC = () => {
                     <option key={p.id} value={p.id} style={{ background: '#1e293b' }}>{p.nombre}</option>
                   ))}
                 </TextField>
-              </Grid>
-
-              {/* Multi-select Tanks */}
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel>Tanques de Origen Utilizados (HASTA MÁXIMO 2 O 3 TANQUES)</InputLabel>
-                  <Select
-                    multiple
-                    value={selectedTanks}
-                    onChange={(e) => {
-                      const vals = typeof e.target.value === 'string' ? e.target.value.split(',').map(Number) : (e.target.value as number[]);
-                      if (vals.length <= 3) setSelectedTanks(vals);
-                    }}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => (
-                          <Chip key={value} label={tanks.find((t) => t.id === value)?.codigo} size="small" color="secondary" />
-                        ))}
-                      </Box>
-                    )}
-                  >
-
-                    {tanks.map((tank) => (
-                      <MenuItem key={tank.id} value={tank.id}>
-                        <Checkbox checked={selectedTanks.indexOf(tank.id) > -1} />
-                        <ListItemText primary={`${tank.codigo} (${tank.capacidad_m3} m³)`} />
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              {/* Multi-select Pumps (Max 3) */}
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel>Bombas Utilizadas (HASTA MÁXIMO 3 BOMBAS)</InputLabel>
-                  <Select
-                    multiple
-                    value={selectedPumps}
-                    onChange={(e) => {
-                      const vals = typeof e.target.value === 'string' ? e.target.value.split(',').map(Number) : (e.target.value as number[]);
-                      if (vals.length <= 3) setSelectedPumps(vals);
-                    }}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => (
-                          <Chip key={value} label={pumps.find((p) => p.id === value)?.codigo} size="small" color="primary" />
-                        ))}
-                      </Box>
-                    )}
-                  >
-                    {pumps.map((pump) => (
-                      <MenuItem key={pump.id} value={pump.id}>
-                        <Checkbox checked={selectedPumps.indexOf(pump.id) > -1} />
-                        <ListItemText primary={`${pump.codigo} - ${pump.nombre} (${pump.marca})`} />
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
               </Grid>
 
               <Grid item xs={12}>

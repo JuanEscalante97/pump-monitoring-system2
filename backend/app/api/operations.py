@@ -5,8 +5,10 @@ from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.models.models import Operation, Tank, Pump, Vessel, Product, User, ScheduledInspection
 from app.schemas.schemas import OperationCreate, OperationResponse
+from app.schemas.schemas import OperationCreate, OperationResponse
 from app.core.security import get_current_user
 from app.core.audit import log_audit_action, get_client_ip
+from datetime import timedelta, timezone
 from app.services.inspection_service import generate_hourly_inspections
 
 router = APIRouter(prefix="/api/operations", tags=["Operaciones de Bombeo"])
@@ -45,17 +47,7 @@ def create_operation(
             detail=f"Ya existe una operación activa ({active_op.codigo_operacion}). Debe finalizarla antes de iniciar una nueva."
         )
 
-    # Rule 2: Maximum 3 pumps!
-    if len(op_in.pump_ids) > 3 or len(op_in.pump_ids) == 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Debe seleccionar entre 1 y hasta máximo 3 bombas para la operación."
-        )
-
-    if len(op_in.tank_ids) == 0 or len(op_in.tank_ids) > 3:
-        raise HTTPException(status_code=400, detail="Debe seleccionar entre 1 y máximo 3 tanques de origen.")
-
-
+    # Validations for tanks/pumps removed to allow flexible operations
     # Validate entities exist
     buque = db.query(Vessel).filter(Vessel.id == op_in.buque_id).first()
     if not buque:
@@ -68,7 +60,8 @@ def create_operation(
     tanks = db.query(Tank).filter(Tank.id.in_(op_in.tank_ids)).all()
     pumps = db.query(Pump).filter(Pump.id.in_(op_in.pump_ids)).all()
 
-    now_dt = datetime.now()
+    tz_peru = timezone(timedelta(hours=-5))
+    now_dt = datetime.now(tz_peru).replace(tzinfo=None)
     codigo_op = f"OP-{now_dt.strftime('%Y%m%d')}-{now_dt.strftime('%H%M%S')}"
 
     operation = Operation(
@@ -88,10 +81,8 @@ def create_operation(
     db.commit()
     db.refresh(operation)
 
-    # Update pump states to "En Operacion"
-    for p in pumps:
-        p.estado = "En Operacion"
-    db.commit()
+    # Automatic hourly scheduled inspection slots are no longer bound to specific pumps at start
+    # but the slots are bound to the operation itself.
 
     # Generate automatic hourly scheduled inspection slots
     generate_hourly_inspections(db, operation)

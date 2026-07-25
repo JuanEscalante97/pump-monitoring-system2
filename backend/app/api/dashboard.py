@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Any
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -19,14 +19,18 @@ def get_dashboard_kpis(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    today = date.today()
+    tz_peru = timezone(timedelta(hours=-5))
+    today = datetime.now(tz_peru).date()
 
     # Active operations
     operaciones_activas = db.query(Operation).filter(Operation.estado == "Activa").count()
 
     # Active working pumps
     active_op = db.query(Operation).filter(Operation.estado == "Activa").first()
-    bombas_trabajando = len(active_op.pumps) if active_op else 0
+    if active_op:
+        bombas_trabajando = db.query(Pump).join(Measurement).filter(Measurement.operation_id == active_op.id).distinct().count()
+    else:
+        bombas_trabajando = 0
 
     # Scheduled inspections
     inspecciones_pendientes = db.query(ScheduledInspection).filter(ScheduledInspection.estado == "Pendiente").count()
@@ -72,8 +76,14 @@ def get_pid_diagram_data(
 ):
     active_op = db.query(Operation).filter(Operation.estado == "Activa").first()
     
-    pumps_list = active_op.pumps if active_op else []
-    all_tanks = active_op.tanks if active_op else []
+    if active_op:
+        # PUMPS: Distinct pumps that have measurements in this active operation
+        pumps_list = db.query(Pump).join(Measurement).filter(Measurement.operation_id == active_op.id).distinct().all()
+        # If no measurements yet, maybe show all pumps or none. Let's show none until they measure.
+        all_tanks = db.query(Tank).all() # Just show all tanks in the terminal
+    else:
+        pumps_list = []
+        all_tanks = []
 
     pumps_status = []
     for p in pumps_list:
