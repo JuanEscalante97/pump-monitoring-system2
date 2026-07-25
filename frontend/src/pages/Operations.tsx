@@ -19,6 +19,7 @@ import {
   DialogActions,
   Checkbox,
   TableContainer,
+} from '@mui/material';
 import { Plus, Square, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
 import { Operation, Vessel, Product } from '../types';

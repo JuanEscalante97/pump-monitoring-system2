@@ -19,6 +19,7 @@ import {
   Alert,
   TableContainer,
   Checkbox,
+} from '@mui/material';
 import { History as HistoryIcon, Search, Edit3, ShieldAlert, Trash2, MessageCircle, Copy } from 'lucide-react';
 import { api } from '../api/client';
 import { Measurement, Pump, Vessel, Product } from '../types';
