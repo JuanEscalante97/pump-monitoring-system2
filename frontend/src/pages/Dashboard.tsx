@@ -40,15 +40,20 @@ export const Dashboard: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       setErrorMsg(null);
-      const [kpiRes, pidRes, chartRes] = await Promise.all([
+      const [kpiRes, pidRes] = await Promise.all([
         api.get('/dashboard/kpis'),
         api.get('/dashboard/pid-diagram'),
-        api.get('/dashboard/charts'),
       ]);
 
       setKpis(kpiRes.data);
       setPidData(pidRes.data);
-      setChartData(chartRes.data);
+
+      if (pidRes.data.active_operation) {
+        const chartRes = await api.get(`/dashboard/charts?operation_id=${pidRes.data.active_operation.id}`);
+        setChartData(chartRes.data);
+      } else {
+        setChartData(null);
+      }
     } catch (err: any) {
       console.error('Error al cargar datos del dashboard:', err);
       setErrorMsg(err.response?.data?.detail || 'No se pudieron sincronizar algunos datos en vivo del backend.');

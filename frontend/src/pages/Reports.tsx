@@ -17,11 +17,19 @@ import {
 import { FileText, FileSpreadsheet, Download, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { Operation } from '../types';
+import { Operation, Vessel } from '../types';
+import {
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
+} from '@mui/material';
 
 export const Reports: React.FC = () => {
   const { user } = useAuth();
   const [operations, setOperations] = useState<Operation[]>([]);
+  const [vessels, setVessels] = useState<Vessel[]>([]);
+  const [selectedVesselId, setSelectedVesselId] = useState<number | 'ALL'>('ALL');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const loadOperations = () => {
@@ -29,6 +37,7 @@ export const Reports: React.FC = () => {
       setOperations(res.data);
       setSelectedIds([]);
     });
+    api.get('/vessels').then(res => setVessels(res.data));
   };
 
   useEffect(() => {
@@ -106,16 +115,39 @@ export const Reports: React.FC = () => {
             Exporte informes consolidados en formato PDF institucional o libro de cálculo Excel para análisis de mantenimiento.
           </Typography>
         </Box>
-        {user?.role === 'Administrador' && selectedIds.length > 0 && (
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<Trash2 size={18} />}
-            onClick={handleBulkDelete}
-          >
-            Eliminar ({selectedIds.length})
-          </Button>
-        )}
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <FormControl sx={{ minWidth: 200 }} size="small">
+            <InputLabel id="vessel-filter-label" sx={{ color: '#94a3b8' }}>Filtrar por Buque</InputLabel>
+            <Select
+              labelId="vessel-filter-label"
+              value={selectedVesselId}
+              label="Filtrar por Buque"
+              onChange={(e) => setSelectedVesselId(e.target.value as number | 'ALL')}
+              sx={{
+                color: '#f8fafc',
+                '.MuiOutlinedInput-notchedOutline': { borderColor: '#334155' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#64748b' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#3182ce' },
+                '.MuiSvgIcon-root': { color: '#94a3b8' },
+              }}
+            >
+              <MenuItem value="ALL">Mostrar Todos</MenuItem>
+              {vessels.map(v => (
+                <MenuItem key={v.id} value={v.id}>{v.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {user?.role === 'Administrador' && selectedIds.length > 0 && (
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={<Trash2 size={18} />}
+              onClick={handleBulkDelete}
+            >
+              Eliminar ({selectedIds.length})
+            </Button>
+          )}
+        </Box>
       </Box>
 
       <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3 }}>
@@ -127,9 +159,13 @@ export const Reports: React.FC = () => {
                   <TableCell padding="checkbox">
                     <Checkbox
                       color="primary"
-                      indeterminate={selectedIds.length > 0 && selectedIds.length < operations.length}
-                      checked={operations.length > 0 && selectedIds.length === operations.length}
-                      onChange={handleSelectAll}
+                      indeterminate={selectedIds.length > 0 && selectedIds.length < (selectedVesselId === 'ALL' ? operations.length : operations.filter(o => o.buque_id === selectedVesselId).length)}
+                      checked={(selectedVesselId === 'ALL' ? operations.length : operations.filter(o => o.buque_id === selectedVesselId).length) > 0 && selectedIds.length === (selectedVesselId === 'ALL' ? operations.length : operations.filter(o => o.buque_id === selectedVesselId).length)}
+                      onChange={(e) => {
+                        const ops = selectedVesselId === 'ALL' ? operations : operations.filter(o => o.buque_id === selectedVesselId);
+                        if (e.target.checked) setSelectedIds(ops.map(o => o.id));
+                        else setSelectedIds([]);
+                      }}
                     />
                   </TableCell>
                 )}
@@ -143,7 +179,7 @@ export const Reports: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {operations.map((op) => {
+              {(selectedVesselId === 'ALL' ? operations : operations.filter(o => o.buque_id === selectedVesselId)).map((op) => {
                 const isSelected = selectedIds.includes(op.id);
                 return (
                   <TableRow key={op.id} selected={isSelected}>

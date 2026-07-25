@@ -15,6 +15,7 @@ import {
   Alert,
   IconButton,
   Checkbox,
+  TableContainer,
 } from '@mui/material';
 import { Save, AlertTriangle, CheckCircle2, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
@@ -124,11 +125,12 @@ export const Alarms: React.FC = () => {
           Historial de Eventos de Alarma Disparados ({events.length})
         </Typography>
 
-        <Table>
-          <TableHead>
-            <TableRow>
-              {user?.role === 'Administrador' && (
-                <TableCell padding="checkbox">
+        <TableContainer component={Box} sx={{ overflowX: 'auto' }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                {user?.role === 'Administrador' && (
+                  <TableCell padding="checkbox">
                   <Checkbox
                     color="primary"
                     indeterminate={selectedIds.length > 0 && selectedIds.length < events.length}
@@ -208,7 +210,8 @@ export const Alarms: React.FC = () => {
               );
             })}
           </TableBody>
-        </Table>
+          </Table>
+        </TableContainer>
       </Paper>
     </Box>
   );

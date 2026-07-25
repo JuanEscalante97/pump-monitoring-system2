@@ -25,14 +25,15 @@ import {
   ListItemText,
   TableContainer,
 } from '@mui/material';
-import { Workflow, Plus, CheckCircle2, Clock, Play, Square, AlertTriangle } from 'lucide-react';
+import { Activity, Plus, ShieldAlert, FileText, CheckCircle2, Square, AlertTriangle, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
 import { Operation, Pump, Tank, Vessel, Product } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const Operations: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [operations, setOperations] = useState<Operation[]>([]);
   const [pumps, setPumps] = useState<Pump[]>([]);
   const [tanks, setTanks] = useState<Tank[]>([]);
@@ -91,6 +92,7 @@ export const Operations: React.FC = () => {
 
       setDialogOpen(false);
       loadData();
+      navigate('/monitoring');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Error al iniciar la operación.');
     } finally {
@@ -219,8 +221,8 @@ export const Operations: React.FC = () => {
                 <TableCell>Fecha</TableCell>
                 <TableCell>Buque</TableCell>
                 <TableCell>Producto</TableCell>
-                <TableCell>Tanques</TableCell>
-                <TableCell>Bombas (Máx 3)</TableCell>
+                <TableCell>Responsable</TableCell>
+                <TableCell>Observaciones</TableCell>
                 <TableCell>Hora Inicio / Fin</TableCell>
                 <TableCell>Estado</TableCell>
                 <TableCell align="right">Acciones</TableCell>
@@ -246,8 +248,8 @@ export const Operations: React.FC = () => {
                   <TableCell>{op.fecha}</TableCell>
                   <TableCell>{op.buque?.nombre}</TableCell>
                   <TableCell>{op.producto?.nombre}</TableCell>
-                  <TableCell>{op.tanks.map((t) => t.codigo).join(', ') || '-'}</TableCell>
-                  <TableCell>{op.pumps.map((p) => p.codigo).join(', ') || '-'}</TableCell>
+                  <TableCell>{op.responsable?.username || '-'}</TableCell>
+                  <TableCell>{op.observaciones || '-'}</TableCell>
                   <TableCell>{op.hora_inicio.substring(0, 5)} - {op.hora_fin ? op.hora_fin.substring(0, 5) : 'En Proceso'}</TableCell>
                   <TableCell>
                     <Chip

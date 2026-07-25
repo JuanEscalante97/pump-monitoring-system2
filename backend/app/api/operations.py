@@ -50,7 +50,17 @@ def get_active_operation(
     current_user: User = Depends(get_current_user)
 ):
     """Retorna la operación actualmente activa (si existe)."""
-    return db.query(Operation).filter(Operation.estado == "Activa").order_by(Operation.created_at.desc()).first()
+    op = db.query(Operation).filter(Operation.estado == "Activa").order_by(Operation.created_at.desc()).first()
+    if not op:
+        return None
+    
+    op_dict = OperationResponse.model_validate(op).model_dump()
+    dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == op.id).distinct().all()
+    dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == op.id).distinct().all()
+    
+    op_dict["tanks"] = [TankResponse.model_validate(t).model_dump() for t in dynamic_tanks]
+    op_dict["pumps"] = [PumpResponse.model_validate(p).model_dump() for p in dynamic_pumps]
+    return op_dict
 
 @router.post("", response_model=OperationResponse, status_code=status.HTTP_201_CREATED)
 def create_operation(

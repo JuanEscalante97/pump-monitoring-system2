@@ -153,7 +153,9 @@ export const Monitoring: React.FC = () => {
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={3}>
                 <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>OPERACIÓN ACTIVA</Typography>
-                <Typography variant="h6" sx={{ color: '#63b3ed', fontWeight: 700 }}>{activeOp.codigo_operacion}</Typography>
+                <Typography variant="h6" sx={{ color: '#63b3ed', fontWeight: 700 }}>
+                  {activeOp.codigo_operacion.length > 10 ? 'OP-' + activeOp.codigo_operacion.slice(-3) : activeOp.codigo_operacion}
+                </Typography>
               </Grid>
               <Grid item xs={12} md={3}>
                 <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>BUQUE EN PUERTO</Typography>
