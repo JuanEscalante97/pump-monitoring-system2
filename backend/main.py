@@ -57,7 +57,7 @@ def startup_db():
         ("measurements", "corregido_motivo", "TEXT"),
         ("alarm_events", "measurement_id", "INTEGER REFERENCES measurements(id)"),
         ("operations", "fecha_fin", "DATE"),
-        ("measurements", "temperatura_bomba_c", "FLOAT"),
+        ("measurements", "temperatura_bomba_c", "DOUBLE PRECISION" if "sqlite" not in str(engine.url).lower() else "FLOAT"),
     ]
     
     for table, col, col_type in columns_to_check:
@@ -68,7 +68,7 @@ def startup_db():
                 conn.execute(text(sql))
                 conn.commit()
         except Exception as e:
-            pass
+            logger.warning(f"Aviso en verificación de columna {table}.{col}: {e}")
 
     # Hacer presion_succion_inhg opcional en PostgreSQL si tenía constraint NOT NULL
     try:
@@ -110,6 +110,7 @@ def root():
     return {
         "system": settings.APP_NAME,
         "status": "ONLINE",
+        "version": "2.0.0 (Temp. Bomba Activa)",
         "docs": "/docs"
     }
 
