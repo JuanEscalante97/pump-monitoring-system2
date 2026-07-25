@@ -57,8 +57,15 @@ def startup_db():
                 conn.execute(text("ALTER TABLE measurements ADD COLUMN tanque_id INTEGER REFERENCES tanks(id)"))
                 logger.info("Columna 'tanque_id' añadida exitosamente a measurements.")
             except Exception as e:
-                # Column probably exists
-                logger.info("Columna 'tanque_id' ya existe o no se pudo añadir (ignorado).")
+                pass
+                
+            # Limpiar registros huérfanos dejados por SQLite al no imponer foreign keys por defecto
+            try:
+                conn.execute(text("DELETE FROM measurements WHERE operation_id NOT IN (SELECT id FROM operations)"))
+                conn.execute(text("DELETE FROM alarm_events WHERE operacion_id NOT IN (SELECT id FROM operations)"))
+                logger.info("Registros huérfanos limpiados exitosamente.")
+            except Exception as e:
+                logger.error(f"Error limpiando huérfanos: {e}")
     except Exception as e:
         logger.error(f"Error en parche de BD: {e}")
 

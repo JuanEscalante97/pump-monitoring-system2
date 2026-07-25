@@ -221,7 +221,6 @@ export const Operations: React.FC = () => {
                 <TableCell>Fecha</TableCell>
                 <TableCell>Buque</TableCell>
                 <TableCell>Producto</TableCell>
-                <TableCell>Responsable</TableCell>
                 <TableCell>Observaciones</TableCell>
                 <TableCell>Hora Inicio / Fin</TableCell>
                 <TableCell>Estado</TableCell>
@@ -248,7 +247,6 @@ export const Operations: React.FC = () => {
                   <TableCell>{op.fecha}</TableCell>
                   <TableCell>{op.buque?.nombre}</TableCell>
                   <TableCell>{op.producto?.nombre}</TableCell>
-                  <TableCell>{op.responsable?.username || '-'}</TableCell>
                   <TableCell>{op.observaciones || '-'}</TableCell>
                   <TableCell>{op.hora_inicio.substring(0, 5)} - {op.hora_fin ? op.hora_fin.substring(0, 5) : 'En Proceso'}</TableCell>
                   <TableCell>

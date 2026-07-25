@@ -179,6 +179,12 @@ def delete_operation(
         for p in operation.pumps:
             p.estado = "Operativa"
             
+    # Explicitly delete related records to prevent SQLite orphaned records reusing IDs
+    from app.models.models import Measurement, AlarmEvent, ScheduledInspection
+    db.query(Measurement).filter(Measurement.operation_id == operation_id).delete(synchronize_session=False)
+    db.query(AlarmEvent).filter(AlarmEvent.operacion_id == operation_id).delete(synchronize_session=False)
+    db.query(ScheduledInspection).filter(ScheduledInspection.operation_id == operation_id).delete(synchronize_session=False)
+    
     db.delete(operation)
     db.commit()
 
