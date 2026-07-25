@@ -48,6 +48,7 @@ export const Operations: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const loadData = async () => {
     try {
@@ -64,6 +65,7 @@ export const Operations: React.FC = () => {
       setTanks(tRes.data);
       setVessels(vRes.data);
       setProducts(prRes.data);
+      setSelectedIds([]);
     } catch (err) {
       console.error('Error al cargar operaciones:', err);
     }
@@ -120,6 +122,33 @@ export const Operations: React.FC = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`¿Está seguro de que desea eliminar ${selectedIds.length} operaciones seleccionadas y TODO su historial de lecturas asociado? Esta acción es irreversible.`)) {
+      return;
+    }
+    try {
+      await Promise.all(selectedIds.map(id => api.delete(`/operations/${id}`)));
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al eliminar operaciones');
+    }
+  };
+
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      setSelectedIds(operations.map(op => op.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: number) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
   const activeOp = operations.find((o) => o.estado === 'Activa');
 
   return (
@@ -134,18 +163,31 @@ export const Operations: React.FC = () => {
           </Typography>
         </Box>
 
-        <Button
-          variant="contained"
-          startIcon={<Plus size={18} />}
-          onClick={() => {
-            setError(null);
-            setDialogOpen(true);
-          }}
-          disabled={!!activeOp}
-          sx={{ width: { xs: '100%', sm: 'auto' }, py: { xs: 1.5, sm: 1 } }}
-        >
-          Nueva Operación
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' } }}>
+          {user?.role === 'Administrador' && selectedIds.length > 0 && (
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={<Trash2 size={18} />}
+              onClick={handleBulkDelete}
+              sx={{ width: { xs: '100%', sm: 'auto' }, py: { xs: 1.5, sm: 1 } }}
+            >
+              Eliminar ({selectedIds.length})
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<Plus size={18} />}
+            onClick={() => {
+              setError(null);
+              setDialogOpen(true);
+            }}
+            disabled={!!activeOp}
+            sx={{ width: { xs: '100%', sm: 'auto' }, py: { xs: 1.5, sm: 1 } }}
+          >
+            Nueva Operación
+          </Button>
+        </Box>
       </Box>
 
       {activeOp && (
@@ -163,6 +205,16 @@ export const Operations: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
+                {user?.role === 'Administrador' && (
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      indeterminate={selectedIds.length > 0 && selectedIds.length < operations.length}
+                      checked={operations.length > 0 && selectedIds.length === operations.length}
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>Código</TableCell>
                 <TableCell>Fecha</TableCell>
                 <TableCell>Buque</TableCell>
@@ -175,9 +227,20 @@ export const Operations: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {operations.map((op) => (
-                <TableRow key={op.id}>
-                  <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>{op.codigo_operacion}</TableCell>
+              {operations.map((op) => {
+                const isSelected = selectedIds.includes(op.id);
+                return (
+                  <TableRow key={op.id} selected={isSelected}>
+                    {user?.role === 'Administrador' && (
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          color="primary"
+                          checked={isSelected}
+                          onChange={() => handleSelectOne(op.id)}
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>{op.codigo_operacion}</TableCell>
                   <TableCell>{op.fecha}</TableCell>
                   <TableCell>{op.buque?.nombre}</TableCell>
                   <TableCell>{op.producto?.nombre}</TableCell>
@@ -219,7 +282,8 @@ export const Operations: React.FC = () => {
                     </Box>
                   </TableCell>
                 </TableRow>
-              ))}
+              );
+              })}
             </TableBody>
           </Table>
         </TableContainer>

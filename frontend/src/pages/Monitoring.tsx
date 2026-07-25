@@ -18,12 +18,17 @@ import { Activity, Plus, AlertCircle, Clock, ShieldAlert } from 'lucide-react';
 import { api } from '../api/client';
 import { Operation, Measurement } from '../types';
 import { MeasurementModal } from '../components/MeasurementModal';
+import { useAuth } from '../context/AuthContext';
+import { Checkbox } from '@mui/material';
+import { Trash2 } from 'lucide-react';
 
 export const Monitoring: React.FC = () => {
   const [activeOp, setActiveOp] = useState<Operation | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const { user } = useAuth();
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const loadMonitoringData = async () => {
     try {
@@ -34,8 +39,10 @@ export const Monitoring: React.FC = () => {
       if (currentOp) {
         const mRes = await api.get(`/measurements?operation_id=${currentOp.id}`);
         setMeasurements(mRes.data);
+        setSelectedIds([]);
       } else {
         setMeasurements([]);
+        setSelectedIds([]);
       }
     } catch (err) {
       console.error('Error al cargar monitoreo:', err);
@@ -47,6 +54,33 @@ export const Monitoring: React.FC = () => {
   useEffect(() => {
     loadMonitoringData();
   }, []);
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`¿Está seguro de que desea eliminar ${selectedIds.length} lecturas seleccionadas? Esta acción es irreversible.`)) {
+      return;
+    }
+    try {
+      await Promise.all(selectedIds.map(id => api.delete(`/measurements/${id}`)));
+      loadMonitoringData();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al eliminar mediciones');
+    }
+  };
+
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      setSelectedIds(measurements.map(m => m.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: number) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
 
   return (
     <Box>
@@ -61,14 +95,26 @@ export const Monitoring: React.FC = () => {
         </Box>
 
         {activeOp && (
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Plus size={18} />}
-            onClick={() => setModalOpen(true)}
-          >
-            Registrar Lectura
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            {user?.role === 'Administrador' && selectedIds.length > 0 && (
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<Trash2 size={18} />}
+                onClick={handleBulkDelete}
+              >
+                Eliminar ({selectedIds.length})
+              </Button>
+            )}
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<Plus size={18} />}
+              onClick={() => setModalOpen(true)}
+            >
+              Registrar Lectura
+            </Button>
+          </Box>
         )}
       </Box>
 
@@ -138,6 +184,16 @@ export const Monitoring: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
+                    {user?.role === 'Administrador' && (
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          color="primary"
+                          indeterminate={selectedIds.length > 0 && selectedIds.length < measurements.length}
+                          checked={measurements.length > 0 && selectedIds.length === measurements.length}
+                          onChange={handleSelectAll}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell>FECHA Y HORA</TableCell>
                     <TableCell>Bomba</TableCell>
                     <TableCell>Tanque</TableCell>
@@ -152,8 +208,18 @@ export const Monitoring: React.FC = () => {
                 <TableBody>
                   {measurements.map((m) => {
                     const isAlarm = m.temperatura_c > 80.0 || m.corriente_a > 45.0;
+                    const isSelected = selectedIds.includes(m.id);
                     return (
-                      <TableRow key={m.id}>
+                      <TableRow key={m.id} selected={isSelected}>
+                        {user?.role === 'Administrador' && (
+                          <TableCell padding="checkbox">
+                            <Checkbox
+                              color="primary"
+                              checked={isSelected}
+                              onChange={() => handleSelectOne(m.id)}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell sx={{ fontWeight: 700, color: '#f8fafc' }}>
                           {m.fecha_registro.split('-').reverse().join('/')} {m.hora_registro.substring(0, 5)}
                         </TableCell>
@@ -183,7 +249,7 @@ export const Monitoring: React.FC = () => {
                   })}
                   {measurements.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={10} align="center" sx={{ py: 3, color: '#94a3b8' }}>
+                      <TableCell colSpan={user?.role === 'Administrador' ? 10 : 9} align="center" sx={{ py: 3, color: '#94a3b8' }}>
                         Aún no se han registrado lecturas en esta operación.
                       </TableCell>
                     </TableRow>

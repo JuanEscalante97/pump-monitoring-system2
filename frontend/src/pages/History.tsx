@@ -18,6 +18,7 @@ import {
   DialogActions,
   Alert,
   TableContainer,
+  Checkbox,
 } from '@mui/material';
 import { History as HistoryIcon, Search, Edit3, ShieldAlert, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
@@ -46,6 +47,8 @@ export const History: React.FC = () => {
   const [motivo, setMotivo] = useState('');
   const [corrError, setCorrError] = useState<string | null>(null);
 
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
   const loadData = async () => {
     try {
       const [pRes, vRes, prRes] = await Promise.all([
@@ -73,8 +76,9 @@ export const History: React.FC = () => {
       const url = `/history?${queryParams.join('&')}`;
       const res = await api.get(url);
       setMeasurements(res.data);
+      setSelectedIds([]);
     } catch (err) {
-      console.error('Error al buscar historial:', err);
+      console.error('Error al buscar registros:', err);
     }
   };
 
@@ -127,15 +131,54 @@ export const History: React.FC = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`¿Está seguro de eliminar ${selectedIds.length} registros seleccionados? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+    try {
+      await Promise.all(selectedIds.map(id => api.delete(`/measurements/${id}`)));
+      handleSearch();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al eliminar los registros.');
+    }
+  };
+
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      setSelectedIds(measurements.map(m => m.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: number) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
   return (
     <Box>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700 }}>
-          HISTORIAL DE REGISTROS DE MONITOREO
-        </Typography>
-        <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-          Consulte la trazabilidad histórica de todas las lecturas. Las correcciones conservan la auditoría completa; solo el Administrador puede eliminar registros.
-        </Typography>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700 }}>
+            HISTORIAL DE REGISTROS DE MONITOREO
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+            Consulte la trazabilidad histórica de todas las lecturas. Las correcciones conservan la auditoría completa; solo el Administrador puede eliminar registros.
+          </Typography>
+        </Box>
+        {user?.role === 'Administrador' && selectedIds.length > 0 && (
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<Trash2 size={18} />}
+            onClick={handleBulkDelete}
+          >
+            Eliminar ({selectedIds.length})
+          </Button>
+        )}
       </Box>
 
       {/* Filter Panel */}
@@ -207,6 +250,16 @@ export const History: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
+                {user?.role === 'Administrador' && (
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      indeterminate={selectedIds.length > 0 && selectedIds.length < measurements.length}
+                      checked={measurements.length > 0 && selectedIds.length === measurements.length}
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>FECHA Y HORA</TableCell>
                 <TableCell>Bomba</TableCell>
                 <TableCell>Tanque</TableCell>
@@ -219,8 +272,19 @@ export const History: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {measurements.map((m) => (
-                <TableRow key={m.id}>
+              {measurements.map((m) => {
+                const isSelected = selectedIds.includes(m.id);
+                return (
+                <TableRow key={m.id} selected={isSelected}>
+                  {user?.role === 'Administrador' && (
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        color="primary"
+                        checked={isSelected}
+                        onChange={() => handleSelectOne(m.id)}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell sx={{ fontWeight: 700 }}>
                     {m.fecha_registro.split('-').reverse().join('/')} {m.hora_registro.substring(0, 5)}
                   </TableCell>
@@ -263,7 +327,8 @@ export const History: React.FC = () => {
                     )}
                   </TableCell>
                 </TableRow>
-              ))}
+              );
+              })}
             </TableBody>
           </Table>
         </TableContainer>

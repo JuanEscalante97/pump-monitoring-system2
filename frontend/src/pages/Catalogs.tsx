@@ -19,18 +19,27 @@ import {
   Grid,
   Chip,
   IconButton,
+  Checkbox,
 } from '@mui/material';
 import { Database, Plus, Edit2, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
 import { Pump, Tank, Product, Vessel, AlarmThreshold } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 export const Catalogs: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
   const [pumps, setPumps] = useState<Pump[]>([]);
   const [tanks, setTanks] = useState<Tank[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [thresholds, setThresholds] = useState<AlarmThreshold[]>([]);
+
+  // Bulk select state per tab
+  const [selectedPumpIds, setSelectedPumpIds] = useState<number[]>([]);
+  const [selectedTankIds, setSelectedTankIds] = useState<number[]>([]);
+  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
+  const [selectedVesselIds, setSelectedVesselIds] = useState<number[]>([]);
 
   // Dialog States
   const [modalType, setModalType] = useState<'pump' | 'tank' | 'product' | 'vessel' | null>(null);
@@ -53,6 +62,10 @@ export const Catalogs: React.FC = () => {
       setProducts(prRes.data);
       setVessels(vRes.data);
       setThresholds(thRes.data);
+      setSelectedPumpIds([]);
+      setSelectedTankIds([]);
+      setSelectedProductIds([]);
+      setSelectedVesselIds([]);
     } catch (err) {
       console.error('Error al cargar catálogos:', err);
     }
@@ -150,6 +163,33 @@ export const Catalogs: React.FC = () => {
     }
   };
 
+  // Generic bulk delete helper
+  const handleBulkDelete = async (type: 'pump' | 'tank' | 'product' | 'vessel', ids: number[]) => {
+    if (ids.length === 0) return;
+    if (!window.confirm(`¿Está seguro de eliminar ${ids.length} elementos seleccionados?`)) return;
+    try {
+      await Promise.all(ids.map(id => {
+        if (type === 'pump') return api.delete(`/pumps/${id}`);
+        if (type === 'tank') return api.delete(`/tanks/${id}`);
+        if (type === 'product') return api.delete(`/products/${id}`);
+        return api.delete(`/vessels/${id}`);
+      }));
+      loadAll();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al eliminar elementos del catálogo.');
+    }
+  };
+
+  const makeSelectAll = (list: any[], setter: React.Dispatch<React.SetStateAction<number[]>>) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setter(event.target.checked ? list.map(item => item.id) : []);
+    };
+
+  const makeSelectOne = (setter: React.Dispatch<React.SetStateAction<number[]>>) =>
+    (id: number) => {
+      setter(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+    };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -162,31 +202,61 @@ export const Catalogs: React.FC = () => {
           </Typography>
         </Box>
 
-        <Button
-          variant="contained"
-          startIcon={<Plus size={18} />}
-          onClick={() => {
-            let data: any = {};
-            if (activeTab === 0) {
-              setModalType('pump');
-              const globalTh = thresholds.find(t => t.bomba_id === null);
-              if (globalTh) {
-                data.temp_max_c = globalTh.temp_max_c;
-                data.corriente_max_a = globalTh.corriente_max_a;
-                data.presion_suc_min_inhg = globalTh.presion_suc_min_inhg;
-                data.presion_suc_max_inhg = globalTh.presion_suc_max_inhg;
-                data.presion_desc_min_psi = globalTh.presion_desc_min_psi;
-                data.presion_desc_max_psi = globalTh.presion_desc_max_psi;
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          {user?.role === 'Administrador' && (
+            <>
+              {activeTab === 0 && selectedPumpIds.length > 0 && (
+                <Button variant="contained" color="error" startIcon={<Trash2 size={18} />}
+                  onClick={() => handleBulkDelete('pump', selectedPumpIds)}>
+                  Eliminar ({selectedPumpIds.length})
+                </Button>
+              )}
+              {activeTab === 1 && selectedTankIds.length > 0 && (
+                <Button variant="contained" color="error" startIcon={<Trash2 size={18} />}
+                  onClick={() => handleBulkDelete('tank', selectedTankIds)}>
+                  Eliminar ({selectedTankIds.length})
+                </Button>
+              )}
+              {activeTab === 2 && selectedProductIds.length > 0 && (
+                <Button variant="contained" color="error" startIcon={<Trash2 size={18} />}
+                  onClick={() => handleBulkDelete('product', selectedProductIds)}>
+                  Eliminar ({selectedProductIds.length})
+                </Button>
+              )}
+              {activeTab === 3 && selectedVesselIds.length > 0 && (
+                <Button variant="contained" color="error" startIcon={<Trash2 size={18} />}
+                  onClick={() => handleBulkDelete('vessel', selectedVesselIds)}>
+                  Eliminar ({selectedVesselIds.length})
+                </Button>
+              )}
+            </>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<Plus size={18} />}
+            onClick={() => {
+              let data: any = {};
+              if (activeTab === 0) {
+                setModalType('pump');
+                const globalTh = thresholds.find(t => t.bomba_id === null);
+                if (globalTh) {
+                  data.temp_max_c = globalTh.temp_max_c;
+                  data.corriente_max_a = globalTh.corriente_max_a;
+                  data.presion_suc_min_inhg = globalTh.presion_suc_min_inhg;
+                  data.presion_suc_max_inhg = globalTh.presion_suc_max_inhg;
+                  data.presion_desc_min_psi = globalTh.presion_desc_min_psi;
+                  data.presion_desc_max_psi = globalTh.presion_desc_max_psi;
+                }
               }
-            }
-            if (activeTab === 1) setModalType('tank');
-            if (activeTab === 2) setModalType('product');
-            if (activeTab === 3) setModalType('vessel');
-            setFormData(data);
-          }}
-        >
-          Agregar Nuevo
-        </Button>
+              if (activeTab === 1) setModalType('tank');
+              if (activeTab === 2) setModalType('product');
+              if (activeTab === 3) setModalType('vessel');
+              setFormData(data);
+            }}
+          >
+            Agregar Nuevo
+          </Button>
+        </Box>
       </Box>
 
       {/* Tabs */}
@@ -209,6 +279,15 @@ export const Catalogs: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
+                {user?.role === 'Administrador' && (
+                  <TableCell padding="checkbox">
+                    <Checkbox color="primary"
+                      indeterminate={selectedPumpIds.length > 0 && selectedPumpIds.length < pumps.length}
+                      checked={pumps.length > 0 && selectedPumpIds.length === pumps.length}
+                      onChange={makeSelectAll(pumps, setSelectedPumpIds)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>Código</TableCell>
                 <TableCell>Nombre</TableCell>
                 <TableCell>Marca / Modelo</TableCell>
@@ -220,27 +299,36 @@ export const Catalogs: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {pumps.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>{p.codigo}</TableCell>
-                  <TableCell>{p.nombre}</TableCell>
-                  <TableCell>{p.marca} {p.modelo}</TableCell>
-                  <TableCell>{p.caudal_nominal_m3h} m³/h</TableCell>
-                  <TableCell>{p.motor_info}</TableCell>
-                  <TableCell>{p.potencia_kw} kW</TableCell>
-                  <TableCell>
-                    <Chip label={p.estado} color={p.estado === 'En Operación' ? 'primary' : 'success'} size="small" />
-                  </TableCell>
-                  <TableCell align="center">
-                    <IconButton size="small" onClick={() => handleEdit('pump', p)} color="primary">
-                      <Edit2 size={16} />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleDelete('pump', p.id)} color="error">
-                      <Trash2 size={16} />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {pumps.map((p) => {
+                const isSelected = selectedPumpIds.includes(p.id);
+                return (
+                  <TableRow key={p.id} selected={isSelected}>
+                    {user?.role === 'Administrador' && (
+                      <TableCell padding="checkbox">
+                        <Checkbox color="primary" checked={isSelected}
+                          onChange={() => makeSelectOne(setSelectedPumpIds)(p.id)} />
+                      </TableCell>
+                    )}
+                    <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>{p.codigo}</TableCell>
+                    <TableCell>{p.nombre}</TableCell>
+                    <TableCell>{p.marca} {p.modelo}</TableCell>
+                    <TableCell>{p.caudal_nominal_m3h} m³/h</TableCell>
+                    <TableCell>{p.motor_info}</TableCell>
+                    <TableCell>{p.potencia_kw} kW</TableCell>
+                    <TableCell>
+                      <Chip label={p.estado} color={p.estado === 'En Operación' ? 'primary' : 'success'} size="small" />
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton size="small" onClick={() => handleEdit('pump', p)} color="primary">
+                        <Edit2 size={16} />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDelete('pump', p.id)} color="error">
+                        <Trash2 size={16} />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Paper>
@@ -252,6 +340,15 @@ export const Catalogs: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
+                {user?.role === 'Administrador' && (
+                  <TableCell padding="checkbox">
+                    <Checkbox color="primary"
+                      indeterminate={selectedTankIds.length > 0 && selectedTankIds.length < tanks.length}
+                      checked={tanks.length > 0 && selectedTankIds.length === tanks.length}
+                      onChange={makeSelectAll(tanks, setSelectedTankIds)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>Código</TableCell>
                 <TableCell>Producto Asignado</TableCell>
                 <TableCell>Capacidad (m³)</TableCell>
@@ -260,22 +357,31 @@ export const Catalogs: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tanks.map((t) => (
-                <TableRow key={t.id}>
-                  <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>{t.codigo}</TableCell>
-                  <TableCell>{t.producto?.nombre}</TableCell>
-                  <TableCell>{t.capacidad_m3.toLocaleString()} m³</TableCell>
-                  <TableCell><Chip label={t.estado} size="small" /></TableCell>
-                  <TableCell align="center">
-                    <IconButton size="small" onClick={() => handleEdit('tank', t)} color="primary">
-                      <Edit2 size={16} />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleDelete('tank', t.id)} color="error">
-                      <Trash2 size={16} />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {tanks.map((t) => {
+                const isSelected = selectedTankIds.includes(t.id);
+                return (
+                  <TableRow key={t.id} selected={isSelected}>
+                    {user?.role === 'Administrador' && (
+                      <TableCell padding="checkbox">
+                        <Checkbox color="primary" checked={isSelected}
+                          onChange={() => makeSelectOne(setSelectedTankIds)(t.id)} />
+                      </TableCell>
+                    )}
+                    <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>{t.codigo}</TableCell>
+                    <TableCell>{t.producto?.nombre}</TableCell>
+                    <TableCell>{t.capacidad_m3.toLocaleString()} m³</TableCell>
+                    <TableCell><Chip label={t.estado} size="small" /></TableCell>
+                    <TableCell align="center">
+                      <IconButton size="small" onClick={() => handleEdit('tank', t)} color="primary">
+                        <Edit2 size={16} />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDelete('tank', t.id)} color="error">
+                        <Trash2 size={16} />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Paper>
@@ -287,6 +393,15 @@ export const Catalogs: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
+                {user?.role === 'Administrador' && (
+                  <TableCell padding="checkbox">
+                    <Checkbox color="primary"
+                      indeterminate={selectedProductIds.length > 0 && selectedProductIds.length < products.length}
+                      checked={products.length > 0 && selectedProductIds.length === products.length}
+                      onChange={makeSelectAll(products, setSelectedProductIds)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>Nombre Producto</TableCell>
                 <TableCell>Descripción</TableCell>
                 <TableCell>Densidad (g/cm³)</TableCell>
@@ -295,22 +410,31 @@ export const Catalogs: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {products.map((pr) => (
-                <TableRow key={pr.id}>
-                  <TableCell sx={{ fontWeight: 700, color: '#00b4d8' }}>{pr.nombre}</TableCell>
-                  <TableCell>{pr.descripcion}</TableCell>
-                  <TableCell>{pr.densidad || '-'}</TableCell>
-                  <TableCell>{pr.viscosidad || '-'}</TableCell>
-                  <TableCell align="center">
-                    <IconButton size="small" onClick={() => handleEdit('product', pr)} color="primary">
-                      <Edit2 size={16} />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleDelete('product', pr.id)} color="error">
-                      <Trash2 size={16} />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {products.map((pr) => {
+                const isSelected = selectedProductIds.includes(pr.id);
+                return (
+                  <TableRow key={pr.id} selected={isSelected}>
+                    {user?.role === 'Administrador' && (
+                      <TableCell padding="checkbox">
+                        <Checkbox color="primary" checked={isSelected}
+                          onChange={() => makeSelectOne(setSelectedProductIds)(pr.id)} />
+                      </TableCell>
+                    )}
+                    <TableCell sx={{ fontWeight: 700, color: '#00b4d8' }}>{pr.nombre}</TableCell>
+                    <TableCell>{pr.descripcion}</TableCell>
+                    <TableCell>{pr.densidad || '-'}</TableCell>
+                    <TableCell>{pr.viscosidad || '-'}</TableCell>
+                    <TableCell align="center">
+                      <IconButton size="small" onClick={() => handleEdit('product', pr)} color="primary">
+                        <Edit2 size={16} />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDelete('product', pr.id)} color="error">
+                        <Trash2 size={16} />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Paper>
@@ -322,6 +446,15 @@ export const Catalogs: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
+                {user?.role === 'Administrador' && (
+                  <TableCell padding="checkbox">
+                    <Checkbox color="primary"
+                      indeterminate={selectedVesselIds.length > 0 && selectedVesselIds.length < vessels.length}
+                      checked={vessels.length > 0 && selectedVesselIds.length === vessels.length}
+                      onChange={makeSelectAll(vessels, setSelectedVesselIds)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>Nombre del Buque</TableCell>
                 <TableCell>Empresa Naviera</TableCell>
                 <TableCell>Observaciones</TableCell>
@@ -329,21 +462,30 @@ export const Catalogs: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {vessels.map((v) => (
-                <TableRow key={v.id}>
-                  <TableCell sx={{ fontWeight: 700, color: '#38bdf8' }}>{v.nombre}</TableCell>
-                  <TableCell>{v.empresa}</TableCell>
-                  <TableCell>{v.observaciones || '-'}</TableCell>
-                  <TableCell align="center">
-                    <IconButton size="small" onClick={() => handleEdit('vessel', v)} color="primary">
-                      <Edit2 size={16} />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleDelete('vessel', v.id)} color="error">
-                      <Trash2 size={16} />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {vessels.map((v) => {
+                const isSelected = selectedVesselIds.includes(v.id);
+                return (
+                  <TableRow key={v.id} selected={isSelected}>
+                    {user?.role === 'Administrador' && (
+                      <TableCell padding="checkbox">
+                        <Checkbox color="primary" checked={isSelected}
+                          onChange={() => makeSelectOne(setSelectedVesselIds)(v.id)} />
+                      </TableCell>
+                    )}
+                    <TableCell sx={{ fontWeight: 700, color: '#38bdf8' }}>{v.nombre}</TableCell>
+                    <TableCell>{v.empresa}</TableCell>
+                    <TableCell>{v.observaciones || '-'}</TableCell>
+                    <TableCell align="center">
+                      <IconButton size="small" onClick={() => handleEdit('vessel', v)} color="primary">
+                        <Edit2 size={16} />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDelete('vessel', v.id)} color="error">
+                        <Trash2 size={16} />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Paper>

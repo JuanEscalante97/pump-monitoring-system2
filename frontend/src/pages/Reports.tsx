@@ -12,6 +12,7 @@ import {
   Chip,
   TableContainer,
   IconButton,
+  Checkbox,
 } from '@mui/material';
 import { FileText, FileSpreadsheet, Download, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
@@ -21,9 +22,13 @@ import { Operation } from '../types';
 export const Reports: React.FC = () => {
   const { user } = useAuth();
   const [operations, setOperations] = useState<Operation[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const loadOperations = () => {
-    api.get('/operations').then((res) => setOperations(res.data));
+    api.get('/operations').then((res) => {
+      setOperations(res.data);
+      setSelectedIds([]);
+    });
   };
 
   useEffect(() => {
@@ -65,15 +70,52 @@ export const Reports: React.FC = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`ATENCIÓN: ¿Está seguro que desea eliminar ${selectedIds.length} operaciones y TODAS sus lecturas de monitoreo asociadas? Esta acción es irreversible.`)) return;
+    try {
+      await Promise.all(selectedIds.map(id => api.delete(`/operations/${id}`)));
+      loadOperations();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al eliminar operaciones.');
+    }
+  };
+
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      setSelectedIds(operations.map(op => op.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: number) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
   return (
     <Box>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700 }}>
-          CENTRO DE EMISIÓN DE REPORTES TÉCNICOS
-        </Typography>
-        <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-          Exporte informes consolidados en formato PDF institucional o libro de cálculo Excel para análisis de mantenimiento.
-        </Typography>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700 }}>
+            CENTRO DE EMISIÓN DE REPORTES TÉCNICOS
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+            Exporte informes consolidados en formato PDF institucional o libro de cálculo Excel para análisis de mantenimiento.
+          </Typography>
+        </Box>
+        {user?.role === 'Administrador' && selectedIds.length > 0 && (
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<Trash2 size={18} />}
+            onClick={handleBulkDelete}
+          >
+            Eliminar ({selectedIds.length})
+          </Button>
+        )}
       </Box>
 
       <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3 }}>
@@ -81,6 +123,16 @@ export const Reports: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
+                {user?.role === 'Administrador' && (
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      indeterminate={selectedIds.length > 0 && selectedIds.length < operations.length}
+                      checked={operations.length > 0 && selectedIds.length === operations.length}
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>Código Operación</TableCell>
                 <TableCell>Fecha</TableCell>
                 <TableCell>Buque Destino</TableCell>
@@ -91,8 +143,19 @@ export const Reports: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {operations.map((op) => (
-                <TableRow key={op.id}>
+              {operations.map((op) => {
+                const isSelected = selectedIds.includes(op.id);
+                return (
+                  <TableRow key={op.id} selected={isSelected}>
+                    {user?.role === 'Administrador' && (
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          color="primary"
+                          checked={isSelected}
+                          onChange={() => handleSelectOne(op.id)}
+                        />
+                      </TableCell>
+                    )}
                   <TableCell sx={{ fontWeight: 700, color: '#63b3ed' }}>{op.codigo_operacion}</TableCell>
                   <TableCell>{op.fecha}</TableCell>
                   <TableCell>{op.buque?.nombre}</TableCell>
@@ -131,7 +194,8 @@ export const Reports: React.FC = () => {
                     </Box>
                   </TableCell>
                 </TableRow>
-              ))}
+              );
+              })}
             </TableBody>
           </Table>
         </TableContainer>
