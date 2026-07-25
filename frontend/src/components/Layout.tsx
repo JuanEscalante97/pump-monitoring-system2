@@ -190,7 +190,7 @@ export const Layout: React.FC = () => {
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" component="div" sx={{ fontWeight: 600, color: '#f8fafc', fontSize: { xs: '0.85rem', sm: '1.1rem' }, lineHeight: 1.2 }}>
-              Monitoreo de Condición de Bombas<br/>Terminal Tramarsa Ilo
+              Monitoreo de Condición de Bombas<br/>TLT-Ilo
             </Typography>
 
           </Box>
