@@ -47,6 +47,22 @@ def evaluate_measurement_alarms(db: Session, measurement: Measurement):
         db.add(alarm)
         created_alarms.append(alarm)
 
+    # 1b. Temperatura Alta Bomba (> 80°C)
+    if measurement.temperatura_bomba_c is not None and measurement.temperatura_bomba_c > temp_max:
+        alarm = AlarmEvent(
+            measurement_id=measurement.id,
+            bomba_id=measurement.bomba_id,
+            operacion_id=measurement.operation_id,
+            tipo_alarma="Alta Temperatura Bomba",
+            nivel="ALARM",
+            mensaje=f"¡CRÍTICO! Temperatura de la bomba en {bomba_codigo} excede límite ({measurement.temperatura_bomba_c}°C > {temp_max}°C)",
+            valor_registrado=measurement.temperatura_bomba_c,
+            limite_umbral=temp_max,
+            estado="Activa"
+        )
+        db.add(alarm)
+        created_alarms.append(alarm)
+
     # 2. Corriente Alta (> 45 A)
     if measurement.corriente_a > corriente_max:
         alarm = AlarmEvent(
@@ -64,7 +80,7 @@ def evaluate_measurement_alarms(db: Session, measurement: Measurement):
         created_alarms.append(alarm)
 
     # 3. Presión de Succión fuera de rango
-    if measurement.presion_succion_inhg < presion_suc_min or measurement.presion_succion_inhg > presion_suc_max:
+    if measurement.presion_succion_inhg is not None and (measurement.presion_succion_inhg < presion_suc_min or measurement.presion_succion_inhg > presion_suc_max):
         alarm = AlarmEvent(
             measurement_id=measurement.id,
             bomba_id=measurement.bomba_id,

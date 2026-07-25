@@ -14,7 +14,7 @@ import {
   TableRow,
   TableContainer,
 } from '@mui/material';
-import { Activity, Plus, AlertCircle, Clock, ShieldAlert, MessageCircle, Copy } from 'lucide-react';
+import { Activity, Plus, AlertCircle, Clock, ShieldAlert } from 'lucide-react';
 import { api } from '../api/client';
 import { Operation, Measurement } from '../types';
 import { MeasurementModal } from '../components/MeasurementModal';
@@ -82,39 +82,15 @@ export const Monitoring: React.FC = () => {
     );
   };
 
-  const formatBriefSummary = (m: Measurement) => {
-    const pSucc = m.presion_succion_inhg !== null && m.presion_succion_inhg !== undefined ? `${m.presion_succion_inhg} inHg` : 'N/A';
-    const opCode = activeOp?.codigo_operacion || `OP-${m.operation_id}`;
-    const buqueName = activeOp?.buque?.nombre || 'Buque en puerto';
-    return `📋 RESUMEN DE REGISTRO TÉCNICO\n` +
-           `🚢 Operación: ${opCode} (${buqueName})\n` +
-           `⚙️ Bomba: ${m.bomba?.codigo || '-'}\n` +
-           `🔩 P. Descarga: ${m.presion_descarga_psi} PSI | P. Succión: ${pSucc}\n` +
-           `🌡️ Temp: ${m.temperatura_c} °C | ⚡ Corriente: ${m.corriente_a} A\n` +
-           `🕒 Fecha/Hora: ${m.fecha_registro.split('-').reverse().join('/')} ${m.hora_registro.substring(0, 5)}\n` +
-           `✅ Estado: ${m.temperatura_c > 80 || m.corriente_a > 45 ? 'CRÍTICO 🚨' : 'NORMAL 🟢'}`;
-  };
-
-  const handleShareWhatsApp = (m: Measurement) => {
-    const text = encodeURIComponent(formatBriefSummary(m));
-    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-  };
-
-  const handleCopySummary = (m: Measurement) => {
-    const text = formatBriefSummary(m);
-    navigator.clipboard.writeText(text);
-    alert('¡Estructura de registro copiada en el portapapeles y lista para compartir!');
-  };
-
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700 }}>
-            REGISTRO DE MONITOREO DE CONDICIÓN
+            {'REGISTRO DE MONITOREO DE CONDICIÓN'}
           </Typography>
-          <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-            Capture presiones, temperatura y corriente. La fecha y hora exacta son estampadas por el servidor.
+          <Typography variant="body2" sx={{ color: '#94a3b8', mt: 0.5 }}>
+            {'Capture presiones, temperatura y corriente. La fecha y hora exacta son estampadas por el servidor.'}
           </Typography>
         </Box>
 
@@ -226,10 +202,10 @@ export const Monitoring: React.FC = () => {
                     <TableCell>P. Succión (inHg)</TableCell>
                     <TableCell>P. Descarga (psi)</TableCell>
                     <TableCell>Temp. Motor (°C)</TableCell>
+                    <TableCell>Temp. Bomba (°C)</TableCell>
                     <TableCell>Corriente (A)</TableCell>
                     <TableCell>Estado Alarma</TableCell>
                     <TableCell>Observaciones</TableCell>
-                    <TableCell align="right">Compartir</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -259,6 +235,9 @@ export const Monitoring: React.FC = () => {
                         <TableCell sx={{ color: m.temperatura_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
                           {m.temperatura_c}
                         </TableCell>
+                        <TableCell sx={{ color: m.temperatura_bomba_c && m.temperatura_bomba_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
+                          {m.temperatura_bomba_c ?? '-'}
+                        </TableCell>
                         <TableCell sx={{ color: m.corriente_a > 45 ? '#ef4444' : '#38bdf8', fontWeight: 700 }}>
                           {m.corriente_a}
                         </TableCell>
@@ -271,29 +250,6 @@ export const Monitoring: React.FC = () => {
                           />
                         </TableCell>
                         <TableCell>{m.observaciones || '-'}</TableCell>
-                        <TableCell align="right">
-                          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                            <Button
-                              variant="contained"
-                              size="small"
-                              startIcon={<MessageCircle size={14} />}
-                              onClick={() => handleShareWhatsApp(m)}
-                              sx={{ fontSize: '0.75rem', px: 1, textTransform: 'none', backgroundColor: '#25D366', '&:hover': { backgroundColor: '#1EBE5D' } }}
-                            >
-                              WhatsApp
-                            </Button>
-                            <Button
-                              variant="outlined"
-                              color="info"
-                              size="small"
-                              startIcon={<Copy size={14} />}
-                              onClick={() => handleCopySummary(m)}
-                              sx={{ fontSize: '0.75rem', px: 1, textTransform: 'none' }}
-                            >
-                              Copiar
-                            </Button>
-                          </Box>
-                        </TableCell>
                       </TableRow>
                     );
                   })}

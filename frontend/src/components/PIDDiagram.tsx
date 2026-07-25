@@ -214,7 +214,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
                       <Box
                         sx={{
                           display: 'grid',
-                          gridTemplateColumns: 'repeat(4, 1fr)',
+                          gridTemplateColumns: 'repeat(5, 1fr)',
                           gap: 1,
                           mt: 1.5,
                           p: 1,
@@ -230,6 +230,12 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
                           </Typography>
                         </Box>
                         <Box>
+                          <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>TEMP BOMBA</Typography>
+                          <Typography variant="body2" sx={{ color: last_measurement.temperatura_bomba_c && last_measurement.temperatura_bomba_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
+                            {last_measurement.temperatura_bomba_c !== null && last_measurement.temperatura_bomba_c !== undefined ? `${last_measurement.temperatura_bomba_c}°C` : '-'}
+                          </Typography>
+                        </Box>
+                        <Box>
                           <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>CORRIENTE</Typography>
                           <Typography variant="body2" sx={{ color: last_measurement.corriente_a > 45 ? '#ef4444' : '#38bdf8', fontWeight: 700 }}>
                             {last_measurement.corriente_a} A
@@ -238,7 +244,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
                         <Box>
                           <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>P. SUCCIÓN</Typography>
                           <Typography variant="body2" sx={{ color: '#cbd5e1', fontWeight: 700 }}>
-                            {last_measurement.presion_succion_inhg} inHg
+                            {last_measurement.presion_succion_inhg !== null && last_measurement.presion_succion_inhg !== undefined ? `${last_measurement.presion_succion_inhg} inHg` : '-'}
                           </Typography>
                         </Box>
                         <Box>

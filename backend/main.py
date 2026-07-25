@@ -57,6 +57,7 @@ def startup_db():
         ("measurements", "corregido_motivo", "TEXT"),
         ("alarm_events", "measurement_id", "INTEGER REFERENCES measurements(id)"),
         ("operations", "fecha_fin", "DATE"),
+        ("measurements", "temperatura_bomba_c", "FLOAT"),
     ]
     
     for table, col, col_type in columns_to_check:

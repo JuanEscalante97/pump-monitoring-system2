@@ -176,6 +176,7 @@ class MeasurementBase(BaseModel):
     presion_succion_inhg: Optional[float] = None
     presion_descarga_psi: float
     temperatura_c: float
+    temperatura_bomba_c: Optional[float] = None
     corriente_a: float
     observaciones: Optional[str] = None
     tecnico_mecanico: Optional[str] = None
@@ -187,6 +188,7 @@ class MeasurementCorrection(BaseModel):
     presion_succion_inhg: Optional[float] = None
     presion_descarga_psi: float
     temperatura_c: float
+    temperatura_bomba_c: Optional[float] = None
     corriente_a: float
     corregido_motivo: str
 

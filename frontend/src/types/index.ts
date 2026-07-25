@@ -83,6 +83,7 @@ export interface Measurement {
   presion_succion_inhg?: number | null;
   presion_descarga_psi: number;
   temperatura_c: number;
+  temperatura_bomba_c?: number | null;
   corriente_a: number;
   tecnico_mecanico?: string;
   observaciones?: string;

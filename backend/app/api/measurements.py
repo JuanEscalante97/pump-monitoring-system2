@@ -61,6 +61,7 @@ def create_measurement(
         presion_succion_inhg=m_in.presion_succion_inhg,
         presion_descarga_psi=m_in.presion_descarga_psi,
         temperatura_c=m_in.temperatura_c,
+        temperatura_bomba_c=m_in.temperatura_bomba_c,
         corriente_a=m_in.corriente_a,
         observaciones=m_in.observaciones,
         tecnico_mecanico=m_in.tecnico_mecanico,
@@ -111,6 +112,8 @@ def correct_measurement(
     measurement.presion_succion_inhg = corr_in.presion_succion_inhg
     measurement.presion_descarga_psi = corr_in.presion_descarga_psi
     measurement.temperatura_c = corr_in.temperatura_c
+    if corr_in.temperatura_bomba_c is not None:
+        measurement.temperatura_bomba_c = corr_in.temperatura_bomba_c
     measurement.corriente_a = corr_in.corriente_a
     measurement.is_corrected = True
     measurement.corregido_motivo = corr_in.corregido_motivo

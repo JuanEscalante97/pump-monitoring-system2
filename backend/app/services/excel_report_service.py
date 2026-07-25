@@ -61,7 +61,7 @@ def generate_operation_excel_report(db: Session, operation: Operation) -> io.Byt
     headers_ws2 = [
         "#", "Fecha", "Hora", "Bomba Código", "Bomba Nombre", 
         "Presión Succión (inHg)", "Presión Descarga (psi)", 
-        "Temp. Motor (°C)", "Corriente (A)", "Estado Alarma", 
+        "Temp. Motor (°C)", "Temp. Bomba (°C)", "Corriente (A)", "Estado Alarma", 
         "Técnico Inspector", "Observaciones"
     ]
     ws2.append(headers_ws2)
@@ -87,9 +87,10 @@ def generate_operation_excel_report(db: Session, operation: Operation) -> io.Byt
             str(m.hora_registro),
             m.bomba.codigo if m.bomba else "",
             m.bomba.nombre if m.bomba else "",
-            m.presion_succion_inhg,
+            m.presion_succion_inhg if m.presion_succion_inhg is not None else "",
             m.presion_descarga_psi,
             m.temperatura_c,
+            m.temperatura_bomba_c if m.temperatura_bomba_c is not None else "",
             m.corriente_a,
             status_str,
             m.registrado_por.full_name if m.registrado_por else "",

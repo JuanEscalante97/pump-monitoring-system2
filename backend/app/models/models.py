@@ -165,7 +165,8 @@ class Measurement(Base):
     inspection_id = Column(Integer, ForeignKey("scheduled_inspections.id"), nullable=True)
     presion_succion_inhg = Column(Float, nullable=True)
     presion_descarga_psi = Column(Float, nullable=False)
-    temperatura_c = Column(Float, nullable=False)
+    temperatura_c = Column(Float, nullable=False) # Temp Motor
+    temperatura_bomba_c = Column(Float, nullable=True) # Temp Bomba
     corriente_a = Column(Float, nullable=False)
     observaciones = Column(Text, nullable=True)
     registrado_por_id = Column(Integer, ForeignKey("users.id"), nullable=False)

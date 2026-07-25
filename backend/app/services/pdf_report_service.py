@@ -119,6 +119,7 @@ def generate_operation_pdf_report(db: Session, operation: Operation) -> io.Bytes
             Paragraph("P. Succión (inHg)", header_cell_style),
             Paragraph("P. Descarga (psi)", header_cell_style),
             Paragraph("Temp. Motor (°C)", header_cell_style),
+            Paragraph("Temp. Bomba (°C)", header_cell_style),
             Paragraph("Corriente (A)", header_cell_style),
             Paragraph("Estado", header_cell_style),
             Paragraph("Inspector / Técnico", header_cell_style),
@@ -138,9 +139,10 @@ def generate_operation_pdf_report(db: Session, operation: Operation) -> io.Bytes
             Paragraph(str(idx), cell_style),
             Paragraph(m.hora_registro.strftime("%H:%M:%S") if m.hora_registro else "", cell_style),
             Paragraph(bomba_code, cell_style),
-            Paragraph(f"{m.presion_succion_inhg:.2f}", cell_style),
+            Paragraph(f"{m.presion_succion_inhg:.2f}" if m.presion_succion_inhg is not None else "-", cell_style),
             Paragraph(f"{m.presion_descarga_psi:.2f}", cell_style),
             Paragraph(f"{m.temperatura_c:.1f}", cell_style),
+            Paragraph(f"{m.temperatura_bomba_c:.1f}" if m.temperatura_bomba_c is not None else "-", cell_style),
             Paragraph(f"{m.corriente_a:.1f}", cell_style),
             Paragraph(status_txt, cell_style),
             Paragraph(tech_name, cell_style),
@@ -148,9 +150,9 @@ def generate_operation_pdf_report(db: Session, operation: Operation) -> io.Bytes
         ])
 
     if len(measurements) == 0:
-        table_data.append([Paragraph("No se registraron mediciones en esta operación", cell_style)] + [Paragraph("", cell_style)] * 9)
+        table_data.append([Paragraph("No se registraron mediciones en esta operación", cell_style)] + [Paragraph("", cell_style)] * 10)
 
-    t_meas = Table(table_data, colWidths=[25, 60, 60, 85, 85, 80, 75, 70, 100, 80])
+    t_meas = Table(table_data, colWidths=[20, 55, 55, 75, 75, 70, 70, 65, 65, 95, 75])
     t_meas.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1A365D')),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),

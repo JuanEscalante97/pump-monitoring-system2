@@ -40,8 +40,10 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
   const [presionSuccion, setPresionSuccion] = useState<string>('4.5');
   const [presionDescarga, setPresionDescarga] = useState<string>('85.0');
   const [temperatura, setTemperatura] = useState<string>('68.0');
+  const [temperaturaBomba, setTemperaturaBomba] = useState<string>('64.0');
   const [corriente, setCorriente] = useState<string>('36.0');
   const [observaciones, setObservaciones] = useState<string>('');
+  const [shareText, setShareText] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,10 +66,12 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
           setPresionSuccion('');
           setPresionDescarga('');
           setTemperatura('');
+          setTemperaturaBomba('');
           setCorriente('');
           setObservaciones('');
           setError(null);
           setSaveSuccess(false);
+          setShareText(null);
           setAlarmWarning(null);
         }
       } catch (err) {
@@ -92,26 +96,36 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
         presion_succion_inhg: presionSuccion.trim() === '' || isNaN(parseFloat(presionSuccion)) ? null : parseFloat(presionSuccion),
         presion_descarga_psi: parseFloat(presionDescarga),
         temperatura_c: parseFloat(temperatura),
+        temperatura_bomba_c: temperaturaBomba.trim() === '' || isNaN(parseFloat(temperaturaBomba)) ? null : parseFloat(temperaturaBomba),
         corriente_a: parseFloat(corriente),
         observaciones,
       };
 
       const res = await api.post('/measurements', payload);
 
-      // Check if threshold exceeded
       const tempVal = parseFloat(temperatura);
+      const tempBombaVal = parseFloat(temperaturaBomba);
       const currVal = parseFloat(corriente);
-      if (tempVal > 80.0 || currVal > 45.0) {
-        setAlarmWarning('¡ADVERTENCIA DE SEGURIDAD! La lectura fue registrada pero ha sobrepasado los límites de alarma (Temp > 80°C o Corriente > 45 A).');
+      if (tempVal > 80.0 || (tempBombaVal && tempBombaVal > 80.0) || currVal > 45.0) {
+        setAlarmWarning('¡ADVERTENCIA DE SEGURIDAD! La lectura fue registrada pero ha sobrepasado los límites de alarma.');
       } else {
         setSaveSuccess(true);
       }
 
+      const selBomba = pumps.find(p => p.id === Number(bombaId));
+      const selTanque = tanks.find(t => t.id === Number(tanqueId));
+      const bombaStr = selBomba?.codigo || '-';
+      const tanqueStr = selTanque?.codigo ? ` | "${selTanque.codigo}"` : '';
+      const pSuccStr = presionSuccion.trim() === '' || isNaN(parseFloat(presionSuccion)) ? 'N/A' : `${presionSuccion} inHg`;
+      const tempBombaStr = temperaturaBomba.trim() === '' || isNaN(parseFloat(temperaturaBomba)) ? 'N/A' : `${temperaturaBomba} °C`;
+
+      const repText = `Reporte de Embarque\n\n` +
+        `Bomba: ${bombaStr}${tanqueStr}\n` +
+        `P. Descarga: ${presionDescarga} PSI | P. Succión: ${pSuccStr}\n` +
+        `Temp Motor : ${temperatura} °C | Temp Bomba : ${tempBombaStr} | Corriente: ${corriente} A`;
+
+      setShareText(repText);
       onSuccess();
-      setTimeout(() => {
-        setSaveSuccess(false);
-        onClose();
-      }, 1500);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Error al guardar la medición de condición.');
     } finally {
@@ -128,7 +142,36 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
         </Typography>
       </DialogTitle>
 
-      <form onSubmit={handleSubmit}>
+      {shareText ? (
+        <DialogContent sx={{ py: 4, textAlign: 'center' }}>
+          <Typography variant="h6" sx={{ color: '#10b981', fontWeight: 700, mb: 1.5 }}>
+            Medición Registrada Exitosamente
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#94a3b8', mb: 3 }}>
+            Comparta inmediatamente este registro oficial por WhatsApp:
+          </Typography>
+          <Paper sx={{ p: 2.5, mb: 3, backgroundColor: '#1e293b', textAlign: 'left', fontFamily: 'monospace', fontSize: '0.9rem', color: '#f8fafc', whiteSpace: 'pre-wrap', border: '1px solid #334155', borderRadius: 2 }}>
+            {shareText}
+          </Paper>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 2 }}>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => {
+                const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+                window.open(url, '_blank');
+              }}
+              sx={{ backgroundColor: '#25D366', '&:hover': { backgroundColor: '#1ebe5d' }, fontWeight: 700, px: 3, textTransform: 'none' }}
+            >
+              Compartir en WhatsApp
+            </Button>
+            <Button variant="outlined" onClick={onClose} color="inherit" size="large" sx={{ px: 3, textTransform: 'none' }}>
+              Cerrar
+            </Button>
+          </Box>
+        </DialogContent>
+      ) : (
+        <form onSubmit={handleSubmit}>
         <DialogContent sx={{ pt: 2.5 }}>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           {alarmWarning && <Alert severity="warning" sx={{ mb: 2 }}>{alarmWarning}</Alert>}
@@ -217,38 +260,52 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
             </Grid>
 
             {/* Motor Temperature */}
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
                 required
                 type="number"
                 inputProps={{ step: '0.1' }}
-                label="Temperatura del Motor"
+                label="Temp. Motor"
                 value={temperatura}
                 onChange={(e) => setTemperatura(e.target.value)}
                 InputProps={{
                   endAdornment: <InputAdornment position="end">°C</InputAdornment>,
                 }}
                 error={parseFloat(temperatura) > 80}
-                helperText={parseFloat(temperatura) > 80 ? 'Límite de alarma excede 80°C' : ''}
+              />
+            </Grid>
+
+            {/* Pump Temperature */}
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                type="number"
+                inputProps={{ step: '0.1' }}
+                label="Temp. Bomba"
+                value={temperaturaBomba}
+                onChange={(e) => setTemperaturaBomba(e.target.value)}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">°C</InputAdornment>,
+                }}
+                error={parseFloat(temperaturaBomba) > 80}
               />
             </Grid>
 
             {/* Motor Current */}
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
                 required
                 type="number"
                 inputProps={{ step: '0.1' }}
-                label="Corriente del Motor"
+                label="Corriente Motor"
                 value={corriente}
                 onChange={(e) => setCorriente(e.target.value)}
                 InputProps={{
                   endAdornment: <InputAdornment position="end">A</InputAdornment>,
                 }}
                 error={parseFloat(corriente) > 45}
-                helperText={parseFloat(corriente) > 45 ? 'Límite de alarma excede 45 A' : ''}
               />
             </Grid>
 
@@ -276,6 +333,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
           </Button>
         </DialogActions>
       </form>
+      )}
     </Dialog>
   );
 };
