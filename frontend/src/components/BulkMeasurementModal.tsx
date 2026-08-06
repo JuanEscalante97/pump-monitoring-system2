@@ -148,7 +148,14 @@ export const BulkMeasurementModal: React.FC<BulkMeasurementModalProps> = ({
       setSaveSuccess(true);
       onSuccess();
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Error al registrar lote de mediciones.");
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setError("Faltan campos obligatorios por llenar en una de las bombas.");
+      } else if (typeof detail === 'string') {
+        setError(detail);
+      } else {
+        setError("Error al registrar lote de mediciones.");
+      }
     } finally {
       setLoading(false);
     }
