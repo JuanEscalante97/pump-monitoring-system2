@@ -131,7 +131,7 @@ export const Dashboard: React.FC = () => {
       {/* KPI Cards Grid */}
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
         {/* Card 1: Active Operations */}
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3, borderLeft: '4px solid #3182ce' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>OPERACIONES ACTIVAS</Typography>
@@ -147,7 +147,7 @@ export const Dashboard: React.FC = () => {
         </Grid>
 
         {/* Card 3: Avg Temp */}
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3, borderLeft: '4px solid #ef4444' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>TEMP PROMEDIO MOTOR</Typography>
@@ -163,7 +163,7 @@ export const Dashboard: React.FC = () => {
         </Grid>
 
         {/* Card 4: Avg Current */}
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <Paper sx={{ p: 2.5, backgroundColor: 'background.paper', borderRadius: 3, borderLeft: `4px solid ${theme.palette.success.main}` }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>CORRIENTE PROMEDIO</Typography>
@@ -174,6 +174,22 @@ export const Dashboard: React.FC = () => {
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               Límite Máximo: 45.0 A
+            </Typography>
+          </Paper>
+        </Grid>
+
+        {/* Card 5: ETA Proyection */}
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 2.5, backgroundColor: 'background.paper', borderRadius: 3, borderLeft: `4px solid ${theme.palette.warning.main}` }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>TIEMPO RESTANTE (ETA)</Typography>
+              <Clock size={20} color={theme.palette.warning.main} />
+            </Box>
+            <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 700, mt: 1 }}>
+              {kpis?.eta_horas !== null && kpis?.eta_horas !== undefined ? `${kpis.eta_horas} hrs` : '-'}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              Estimado de vaciado
             </Typography>
           </Paper>
         </Grid>

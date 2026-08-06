@@ -147,6 +147,7 @@ export interface DashboardKPIs {
   presion_succion_promedio: number;
   presion_descarga_promedio: number;
   total_mediciones_hoy: number;
+  eta_horas?: number | null;
 }
 
 export interface PumpLatestStatus {

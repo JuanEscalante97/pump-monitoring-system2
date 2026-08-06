@@ -40,6 +40,7 @@ def get_dashboard_kpis(
     today_measurements = db.query(Measurement).filter(Measurement.fecha_registro == today).all()
     total_mediciones_hoy = len(today_measurements)
 
+    eta_horas = None
     if active_op:
         active_measurements = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
         total_mediciones = len(active_measurements)
@@ -50,6 +51,12 @@ def get_dashboard_kpis(
             p_desc_prom = sum(m.presion_descarga_psi for m in active_measurements) / total_mediciones
         else:
             temp_prom = corr_prom = p_suc_prom = p_desc_prom = 0.0
+
+        # Calcular ETA
+        caudal_total = sum((p.caudal_nominal_m3h or 0) for p in active_op.pumps)
+        capacidad_total = sum((t.capacidad_m3 or 0) for t in active_op.tanks)
+        if caudal_total > 0 and capacidad_total > 0:
+            eta_horas = round(capacidad_total / caudal_total, 2)
     else:
         total_mediciones = 0
         temp_prom = corr_prom = p_suc_prom = p_desc_prom = 0.0
@@ -63,7 +70,8 @@ def get_dashboard_kpis(
         corriente_promedio=round(corr_prom, 1),
         presion_succion_promedio=round(p_suc_prom, 1),
         presion_descarga_promedio=round(p_desc_prom, 1),
-        total_mediciones_hoy=total_mediciones_hoy
+        total_mediciones_hoy=total_mediciones_hoy,
+        eta_horas=eta_horas
     )
 
 @router.get("/pid-diagram", response_model=PIDProcessData)
