@@ -76,19 +76,20 @@ def get_pid_diagram_data(
     if active_op:
         # PUMPS: Distinct pumps that have measurements in this active operation
         pumps_list = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == active_op.id).distinct().all()
-        
-        # TANKS: Distinct tanks that have measurements in this active operation
-        tanks_list = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == active_op.id).distinct().all()
     else:
         pumps_list = []
-        tanks_list = []
 
     pumps_status = []
+    active_tank_ids = set()
+
     for p in pumps_list:
         # Get latest measurement
         last_m = db.query(Measurement).filter(
             Measurement.bomba_id == p.id
         ).order_by(Measurement.datetime_registro.desc()).first()
+
+        if last_m and last_m.tanque_id:
+            active_tank_ids.add(last_m.tanque_id)
 
         # Determine status indicator (🟢 NORMAL, 🟡 WARNING, 🔴 ALARM)
         status_ind = "NORMAL"
@@ -110,6 +111,11 @@ def get_pid_diagram_data(
             status_indicator=status_ind,
             active_alarms_count=active_alarms_count
         ))
+
+    if active_tank_ids:
+        tanks_list = db.query(Tank).filter(Tank.id.in_(active_tank_ids)).all()
+    else:
+        tanks_list = []
 
     return PIDProcessData(
         active_operation=OperationResponse.model_validate(active_op) if active_op else None,
