@@ -48,10 +48,15 @@ def get_dashboard_kpis(
         active_measurements = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
         total_mediciones = len(active_measurements)
         if total_mediciones > 0:
-            temp_prom = sum(m.temperatura_c for m in active_measurements) / total_mediciones
-            corr_prom = sum(m.corriente_a for m in active_measurements) / total_mediciones
-            p_suc_prom = sum(m.presion_succion_inhg for m in active_measurements) / total_mediciones
-            p_desc_prom = sum(m.presion_descarga_psi for m in active_measurements) / total_mediciones
+            temps = [m.temperatura_c for m in active_measurements if m.temperatura_c is not None]
+            corrs = [m.corriente_a for m in active_measurements if m.corriente_a is not None]
+            p_sucs = [m.presion_succion_inhg for m in active_measurements if m.presion_succion_inhg is not None]
+            p_descs = [m.presion_descarga_psi for m in active_measurements if m.presion_descarga_psi is not None]
+            
+            temp_prom = sum(temps) / len(temps) if temps else 0.0
+            corr_prom = sum(corrs) / len(corrs) if corrs else 0.0
+            p_suc_prom = sum(p_sucs) / len(p_sucs) if p_sucs else 0.0
+            p_desc_prom = sum(p_descs) / len(p_descs) if p_descs else 0.0
         else:
             temp_prom = corr_prom = p_suc_prom = p_desc_prom = 0.0
 
@@ -237,6 +242,9 @@ def get_chart_data(
                 "presion_descarga": []
             }
         
+        if not m.hora_registro:
+            continue
+            
         rounded_time = round_time_to_nearest_hour(m.hora_registro)
         # Avoid duplicate labels for the same hour by checking the last label
         if not pumps_data[bomba_code]["labels"] or pumps_data[bomba_code]["labels"][-1] != rounded_time:
