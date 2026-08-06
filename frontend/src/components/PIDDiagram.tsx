@@ -40,7 +40,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
               PANEL DE CONTROL - EMBARQUE
             </Typography>
             <Chip
-              label={isOpActive ? `OPERACIÓN ACTIVA` : 'SIN OPERACIÓN ACTIVA'}
+              label={isOpActive ? `${data.pumps_status.length} BOMBAS EN OPERACIÓN` : 'SIN OPERACIÓN ACTIVA'}
               color={isOpActive ? 'success' : 'default'}
               size="small"
               sx={{ fontWeight: 700, borderRadius: 1.5 }}
