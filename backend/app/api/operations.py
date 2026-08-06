@@ -144,6 +144,43 @@ def create_operation(
 
     return build_operation_response(db, operation)
 
+@router.put("/{operation_id}", response_model=OperationResponse)
+def update_operation(
+    request: Request,
+    operation_id: int,
+    op_in: OperationUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Permite al admin editar la fecha y hora de la operación."""
+    if current_user.role not in ["Admin", "Supervisor"]:
+        raise HTTPException(status_code=403, detail="No tiene permisos para editar la operación")
+        
+    operation = db.query(Operation).filter(Operation.id == operation_id).first()
+    if not operation:
+        raise HTTPException(status_code=404, detail="Operación no encontrada")
+
+    if op_in.fecha is not None:
+        operation.fecha = op_in.fecha
+    if op_in.hora_inicio is not None:
+        operation.hora_inicio = op_in.hora_inicio
+    if op_in.fecha_fin is not None:
+        operation.fecha_fin = op_in.fecha_fin
+    if op_in.hora_fin is not None:
+        operation.hora_fin = op_in.hora_fin
+    if op_in.observaciones is not None:
+        operation.observaciones = op_in.observaciones
+
+    db.commit()
+    db.refresh(operation)
+
+    log_audit_action(
+        db, current_user, "UPDATE_OPERATION", "Operation", operation.id,
+        get_client_ip(request), f"Operación actualizada manualmente: {operation.codigo_operacion}"
+    )
+
+    return build_operation_response(db, operation)
+
 @router.put("/{operation_id}/finish", response_model=OperationResponse)
 def finish_operation(
     request: Request,

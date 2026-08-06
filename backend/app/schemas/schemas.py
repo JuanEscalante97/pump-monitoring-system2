@@ -134,6 +134,13 @@ class OperationCreate(BaseModel):
     pump_ids: List[int] = []
     observaciones: Optional[str] = None
 
+class OperationUpdate(BaseModel):
+    fecha: Optional[date] = None
+    hora_inicio: Optional[time] = None
+    fecha_fin: Optional[date] = None
+    hora_fin: Optional[time] = None
+    observaciones: Optional[str] = None
+
 class ScheduledInspectionResponse(BaseModel):
     id: int
     operation_id: int

@@ -20,7 +20,7 @@ import {
   Checkbox,
   TableContainer,
 } from '@mui/material';
-import { Plus, Square, Trash2, FileSpreadsheet } from 'lucide-react';
+import { Plus, Square, Trash2, Edit } from 'lucide-react';
 import { api } from '../api/client';
 import { Operation, Vessel, Product } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -41,6 +41,14 @@ export const Operations: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  // Edit Operation State
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingOp, setEditingOp] = useState<Operation | null>(null);
+  const [editFecha, setEditFecha] = useState('');
+  const [editHoraInicio, setEditHoraInicio] = useState('');
+  const [editFechaFin, setEditFechaFin] = useState('');
+  const [editHoraFin, setEditHoraFin] = useState('');
 
   const loadData = async () => {
     try {
@@ -107,6 +115,47 @@ export const Operations: React.FC = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`¿Está seguro de eliminar ${selectedIds.length} operaciones? Esto borrará también sus mediciones.`)) {
+      return;
+    }
+    try {
+      for (const id of selectedIds) {
+        await api.delete(`/operations/${id}`);
+      }
+      setSelectedIds([]);
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al eliminar operaciones');
+    }
+  };
+
+  const openEditModal = (op: Operation) => {
+    setEditingOp(op);
+    setEditFecha(op.fecha);
+    setEditHoraInicio(op.hora_inicio.substring(0, 5)); // HH:MM
+    setEditFechaFin(op.fecha_fin || '');
+    setEditHoraFin(op.hora_fin ? op.hora_fin.substring(0, 5) : '');
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateOperation = async () => {
+    if (!editingOp) return;
+    try {
+      await api.put(`/operations/${editingOp.id}`, {
+        fecha: editFecha || null,
+        hora_inicio: editHoraInicio ? `${editHoraInicio}:00` : null,
+        fecha_fin: editFechaFin || null,
+        hora_fin: editHoraFin ? `${editHoraFin}:00` : null,
+      });
+      setEditDialogOpen(false);
+      setEditingOp(null);
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al actualizar operación');
+    }
+  };
+
   const handleDelete = async (id: number) => {
     if (!window.confirm('¿Está seguro de que desea eliminar esta operación y TODO su historial de lecturas asociado? Esta acción es irreversible.')) {
       return;
@@ -116,19 +165,6 @@ export const Operations: React.FC = () => {
       loadData();
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Error al eliminar la operación');
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return;
-    if (!window.confirm(`¿Está seguro de que desea eliminar ${selectedIds.length} operaciones seleccionadas y TODO su historial de lecturas asociado? Esta acción es irreversible.`)) {
-      return;
-    }
-    try {
-      await Promise.all(selectedIds.map(id => api.delete(`/operations/${id}`)));
-      loadData();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Error al eliminar operaciones');
     }
   };
 
@@ -145,24 +181,6 @@ export const Operations: React.FC = () => {
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
-
-  const handleDownloadReport = async (id: number) => {
-    try {
-      const response = await api.get(`/reports/operation/${id}/pdf`, {
-        responseType: 'blob'
-      });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Reporte_Cierre_OP_${id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
-    } catch (err: any) {
-      alert('Error al descargar el reporte PDF');
-    }
-  };
-
   const activeOp = operations.find((o) => o.estado === 'Activa');
 
   return (
@@ -283,15 +301,15 @@ export const Operations: React.FC = () => {
                           Finalizar
                         </Button>
                       )}
-                      {op.estado === 'Finalizada' && (
+                      {user?.role === 'Administrador' && (
                         <Button
                           variant="outlined"
                           color="info"
                           size="small"
-                          startIcon={<FileSpreadsheet size={14} />}
-                          onClick={() => handleDownloadReport(op.id)}
+                          startIcon={<Edit size={14} />}
+                          onClick={() => openEditModal(op)}
                         >
-                          Análisis (PDF)
+                          Editar
                         </Button>
                       )}
                       {user?.role === 'Administrador' && (
@@ -415,6 +433,66 @@ export const Operations: React.FC = () => {
             </Button>
           </DialogActions>
         </form>
+      </Dialog>
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700, color: '#f8fafc', backgroundColor: '#0f172a' }}>
+          Editar Operación {editingOp?.codigo_operacion}
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2, backgroundColor: '#0f172a' }}>
+          <Typography variant="body2" sx={{ color: '#94a3b8', mb: 2 }}>
+            Modifica la fecha y hora de inicio/fin para recalcular correctamente los tiempos y ETA.
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Fecha de Inicio"
+                type="date"
+                value={editFecha}
+                onChange={(e) => setEditFecha(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ input: { color: 'white' }, label: { color: '#64748b' } }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Hora de Inicio"
+                type="time"
+                value={editHoraInicio}
+                onChange={(e) => setEditHoraInicio(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ input: { color: 'white' }, label: { color: '#64748b' } }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Fecha de Fin"
+                type="date"
+                value={editFechaFin}
+                onChange={(e) => setEditFechaFin(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ input: { color: 'white' }, label: { color: '#64748b' } }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Hora de Fin"
+                type="time"
+                value={editHoraFin}
+                onChange={(e) => setEditHoraFin(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ input: { color: 'white' }, label: { color: '#64748b' } }}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: '#0f172a', p: 2 }}>
+          <Button onClick={() => setEditDialogOpen(false)} sx={{ color: '#94a3b8' }}>Cancelar</Button>
+          <Button variant="contained" onClick={handleUpdateOperation} color="primary">Guardar Cambios</Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );
