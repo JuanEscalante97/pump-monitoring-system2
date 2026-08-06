@@ -40,7 +40,10 @@ def get_dashboard_kpis(
     today_measurements = db.query(Measurement).filter(Measurement.fecha_registro == today).all()
     total_mediciones_hoy = len(today_measurements)
 
-    eta_horas = None
+    tiempo_restante_horas = None
+    hora_inicio_op = None
+    hora_fin_estimada = None
+
     if active_op:
         active_measurements = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
         total_mediciones = len(active_measurements)
@@ -52,7 +55,7 @@ def get_dashboard_kpis(
         else:
             temp_prom = corr_prom = p_suc_prom = p_desc_prom = 0.0
 
-        # Calcular ETA
+        # Calcular ETA Dinámico
         dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == active_op.id).distinct().all()
         dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == active_op.id).distinct().all()
         
@@ -60,7 +63,28 @@ def get_dashboard_kpis(
         capacidad_total = sum((t.capacidad_m3 or 0) for t in dynamic_tanks)
         
         if caudal_total > 0 and capacidad_total > 0:
-            eta_horas = round(capacidad_total / caudal_total, 2)
+            # 1. Obtener Hora de Inicio
+            inicio_dt = datetime.combine(active_op.fecha, active_op.hora_inicio).replace(tzinfo=tz_peru)
+            hora_inicio_op = inicio_dt.strftime("%H:%M")
+            
+            # 2. Calcular Tiempo Transcurrido
+            now_dt = datetime.now(tz_peru)
+            horas_transcurridas = (now_dt - inicio_dt).total_seconds() / 3600.0
+            if horas_transcurridas < 0:
+                horas_transcurridas = 0
+                
+            # 3. Calcular Volumen Restante
+            volumen_bombeado = horas_transcurridas * caudal_total
+            volumen_restante = capacidad_total - volumen_bombeado
+            if volumen_restante < 0:
+                volumen_restante = 0
+                
+            # 4. Calcular Tiempo Restante y Hora de Fin
+            tiempo_restante = volumen_restante / caudal_total
+            tiempo_restante_horas = round(tiempo_restante, 2)
+            
+            fin_dt = now_dt + timedelta(hours=tiempo_restante)
+            hora_fin_estimada = fin_dt.strftime("%H:%M")
     else:
         total_mediciones = 0
         temp_prom = corr_prom = p_suc_prom = p_desc_prom = 0.0
@@ -75,7 +99,9 @@ def get_dashboard_kpis(
         presion_succion_promedio=round(p_suc_prom, 1),
         presion_descarga_promedio=round(p_desc_prom, 1),
         total_mediciones_hoy=total_mediciones_hoy,
-        eta_horas=eta_horas
+        tiempo_restante_horas=tiempo_restante_horas,
+        hora_inicio_op=hora_inicio_op,
+        hora_fin_estimada=hora_fin_estimada
     )
 
 @router.get("/pid-diagram", response_model=PIDProcessData)

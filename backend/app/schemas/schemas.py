@@ -260,7 +260,9 @@ class DashboardKPIs(BaseModel):
     presion_succion_promedio: float
     presion_descarga_promedio: float
     total_mediciones_hoy: int
-    eta_horas: Optional[float] = None
+    tiempo_restante_horas: Optional[float] = None
+    hora_inicio_op: Optional[str] = None
+    hora_fin_estimada: Optional[str] = None
 
 class PumpLatestStatus(BaseModel):
     pump: PumpResponse

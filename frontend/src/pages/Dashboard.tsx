@@ -186,10 +186,12 @@ export const Dashboard: React.FC = () => {
               <Clock size={20} color={theme.palette.warning.main} />
             </Box>
             <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 700, mt: 1 }}>
-              {kpis?.eta_horas !== null && kpis?.eta_horas !== undefined ? `${kpis.eta_horas} hrs` : '-'}
+              {kpis?.tiempo_restante_horas !== null && kpis?.tiempo_restante_horas !== undefined ? `${kpis.tiempo_restante_horas} hrs` : '-'}
             </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              Estimado de vaciado
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
+              {kpis?.hora_inicio_op && kpis?.hora_fin_estimada 
+                ? `Inició: ${kpis.hora_inicio_op} | Fin: ${kpis.hora_fin_estimada}`
+                : 'Estimado de vaciado'}
             </Typography>
           </Paper>
         </Grid>
