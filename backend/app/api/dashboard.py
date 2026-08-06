@@ -53,8 +53,12 @@ def get_dashboard_kpis(
             temp_prom = corr_prom = p_suc_prom = p_desc_prom = 0.0
 
         # Calcular ETA
-        caudal_total = sum((p.caudal_nominal_m3h or 0) for p in active_op.pumps)
-        capacidad_total = sum((t.capacidad_m3 or 0) for t in active_op.tanks)
+        dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == active_op.id).distinct().all()
+        dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == active_op.id).distinct().all()
+        
+        caudal_total = sum((p.caudal_nominal_m3h or 0) for p in dynamic_pumps)
+        capacidad_total = sum((t.capacidad_m3 or 0) for t in dynamic_tanks)
+        
         if caudal_total > 0 and capacidad_total > 0:
             eta_horas = round(capacidad_total / caudal_total, 2)
     else:
