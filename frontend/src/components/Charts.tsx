@@ -196,7 +196,6 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
                     }
                   ]
                 }} 
-                }} 
                 options={getOptions('Corriente (A)', 'Temperatura (°C)')} 
               />
             </Box>
@@ -242,7 +241,6 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
                       borderDash: [5, 5],
                     }
                   ]
-                }} 
                 }} 
                 options={getOptions('Descarga (PSI)', 'Succión (inHg)')} 
               />
