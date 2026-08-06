@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,7 +12,7 @@ import {
 } from 'chart.js';
 import { useTheme } from '@mui/material/styles';
 import { Line } from 'react-chartjs-2';
-import { Box, Paper, Typography, Grid } from '@mui/material';
+import { Box, Paper, Typography, Grid, Tabs, Tab } from '@mui/material';
 
 ChartJS.register(
   CategoryScale,
@@ -41,18 +41,32 @@ interface ChartsProps {
 
 export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
   const theme = useTheme();
+  
+  const pumpNames = Object.keys(data?.pumps || {});
+  const [activeTab, setActiveTab] = useState(0);
 
-  if (!data || !data.pumps || Object.keys(data.pumps).length === 0) return null;
+  if (!data || !data.pumps || pumpNames.length === 0) return null;
 
-  const commonOptions = {
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
+
+  const selectedPumpName = pumpNames[activeTab];
+  const pumpData = data.pumps[selectedPumpName];
+
+  if (!pumpData) return null;
+
+  const commonOptions: any = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: 'top',
         labels: {
           color: theme.palette.text.secondary,
           font: { family: 'Inter', size: 12 },
+          usePointStyle: true,
+          boxWidth: 8,
         },
       },
       tooltip: {
@@ -61,6 +75,8 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
         bodyColor: theme.palette.text.secondary,
         borderColor: theme.palette.divider,
         borderWidth: 1,
+        mode: 'index',
+        intersect: false,
       },
     },
     scales: {
@@ -69,114 +85,131 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
         grid: { color: theme.palette.divider },
       },
       y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
         ticks: { color: theme.palette.text.secondary, font: { size: 11 } },
         grid: { color: theme.palette.divider },
+      },
+      y1: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        ticks: { color: theme.palette.text.secondary, font: { size: 11 } },
+        grid: { drawOnChartArea: false }, // avoid grid lines overlapping
       },
     },
   };
 
   return (
-    <Box>
-      {Object.entries(data.pumps).map(([pumpName, pumpData]) => (
-        <Box key={pumpName} sx={{ mb: 4 }}>
-          <Typography variant="h6" sx={{ color: '#38bdf8', mb: 2, fontWeight: 700, fontFamily: 'Chakra Petch' }}>
-            Tendencias: {pumpName}
-          </Typography>
-          <Grid container spacing={3}>
-            {/* Temperature */}
-            <Grid item xs={12} md={6} lg={6}>
-              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 320, display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ flexGrow: 1, position: 'relative' }}>
-                  <Line 
-                    data={{
-                      labels: pumpData.labels,
-                      datasets: [{
-                        label: 'Temp. Motor (°C)',
-                        data: pumpData.temperatura,
-                        borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                      }]
-                    }} 
-                    options={commonOptions} 
-                  />
-                </Box>
-              </Paper>
-            </Grid>
+    <Box sx={{ mt: 2 }}>
+      {pumpNames.length > 1 && (
+        <Tabs 
+          value={activeTab} 
+          onChange={handleTabChange} 
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ 
+            mb: 3, 
+            borderBottom: 1, 
+            borderColor: 'divider',
+            '& .MuiTab-root': { fontWeight: 700, fontFamily: 'Chakra Petch', fontSize: '1rem' }
+          }}
+        >
+          {pumpNames.map((name, idx) => (
+            <Tab key={name} label={`BOMBA ${name}`} />
+          ))}
+        </Tabs>
+      )}
 
-            {/* Current */}
-            <Grid item xs={12} md={6} lg={6}>
-              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 320, display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ flexGrow: 1, position: 'relative' }}>
-                  <Line 
-                    data={{
-                      labels: pumpData.labels,
-                      datasets: [{
-                        label: 'Corriente (A)',
-                        data: pumpData.corriente,
-                        borderColor: '#00b4d8',
-                        backgroundColor: 'rgba(0, 180, 216, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                      }]
-                    }} 
-                    options={commonOptions} 
-                  />
-                </Box>
-              </Paper>
-            </Grid>
+      {/* Título de sección si solo hay 1 bomba y no hay Tabs */}
+      {pumpNames.length === 1 && (
+        <Typography variant="h6" sx={{ color: theme.palette.primary.main, mb: 3, fontWeight: 700, fontFamily: 'Chakra Petch' }}>
+          TENDENCIAS: {selectedPumpName}
+        </Typography>
+      )}
 
-            {/* Suction Pressure */}
-            <Grid item xs={12} md={6} lg={6}>
-              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 320, display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ flexGrow: 1, position: 'relative' }}>
-                  <Line 
-                    data={{
-                      labels: pumpData.labels,
-                      datasets: [{
-                        label: 'P. Succión (inHg)',
-                        data: pumpData.presion_succion,
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                      }]
-                    }} 
-                    options={commonOptions} 
-                  />
-                </Box>
-              </Paper>
-            </Grid>
+      <Grid container spacing={3}>
+        {/* Gráfico 1: Corriente vs Temperatura */}
+        <Grid item xs={12} lg={6}>
+          <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 360, display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="subtitle2" sx={{ color: 'text.primary', mb: 1, fontWeight: 600 }}>
+              Esfuerzo Eléctrico vs Calentamiento Térmico
+            </Typography>
+            <Box sx={{ flexGrow: 1, position: 'relative' }}>
+              <Line 
+                data={{
+                  labels: pumpData.labels,
+                  datasets: [
+                    {
+                      label: 'Corriente (A)',
+                      data: pumpData.corriente,
+                      borderColor: theme.palette.info.main,
+                      backgroundColor: 'transparent',
+                      yAxisID: 'y',
+                      tension: 0.3,
+                      pointRadius: 4,
+                      borderWidth: 2,
+                    },
+                    {
+                      label: 'Temperatura (°C)',
+                      data: pumpData.temperatura,
+                      borderColor: theme.palette.error.main,
+                      backgroundColor: 'transparent',
+                      yAxisID: 'y1',
+                      tension: 0.3,
+                      pointRadius: 4,
+                      borderWidth: 2,
+                      borderDash: [5, 5],
+                    }
+                  ]
+                }} 
+                options={commonOptions} 
+              />
+            </Box>
+          </Paper>
+        </Grid>
 
-            {/* Discharge Pressure */}
-            <Grid item xs={12} md={6} lg={6}>
-              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 320, display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ flexGrow: 1, position: 'relative' }}>
-                  <Line 
-                    data={{
-                      labels: pumpData.labels,
-                      datasets: [{
-                        label: 'P. Descarga (PSI)',
-                        data: pumpData.presion_descarga,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                      }]
-                    }} 
-                    options={commonOptions} 
-                  />
-                </Box>
-              </Paper>
-            </Grid>
-          </Grid>
-        </Box>
-      ))}
+        {/* Gráfico 2: Presión Descarga vs Succión */}
+        <Grid item xs={12} lg={6}>
+          <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 360, display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="subtitle2" sx={{ color: 'text.primary', mb: 1, fontWeight: 600 }}>
+              Dinámica de Fluidos (Presiones)
+            </Typography>
+            <Box sx={{ flexGrow: 1, position: 'relative' }}>
+              <Line 
+                data={{
+                  labels: pumpData.labels,
+                  datasets: [
+                    {
+                      label: 'P. Descarga (PSI)',
+                      data: pumpData.presion_descarga,
+                      borderColor: theme.palette.success.main,
+                      backgroundColor: 'transparent',
+                      yAxisID: 'y',
+                      tension: 0.3,
+                      pointRadius: 4,
+                      borderWidth: 2,
+                    },
+                    {
+                      label: 'P. Succión (inHg)',
+                      data: pumpData.presion_succion,
+                      borderColor: theme.palette.warning.main,
+                      backgroundColor: 'transparent',
+                      yAxisID: 'y1',
+                      tension: 0.3,
+                      pointRadius: 4,
+                      borderWidth: 2,
+                      borderDash: [5, 5],
+                    }
+                  ]
+                }} 
+                options={commonOptions} 
+              />
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
