@@ -56,7 +56,7 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
 
   if (!pumpData) return null;
 
-  const commonOptions: any = {
+  const getOptions = (yTitle: string, y1Title: string): any => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -88,6 +88,13 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
         type: 'linear',
         display: true,
         position: 'left',
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: yTitle,
+          color: theme.palette.text.secondary,
+          font: { size: 11, weight: 'bold' }
+        },
         ticks: { color: theme.palette.text.secondary, font: { size: 11 } },
         grid: { color: theme.palette.divider },
       },
@@ -95,11 +102,30 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
         type: 'linear',
         display: true,
         position: 'right',
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: y1Title,
+          color: theme.palette.text.secondary,
+          font: { size: 11, weight: 'bold' }
+        },
         ticks: { color: theme.palette.text.secondary, font: { size: 11 } },
         grid: { drawOnChartArea: false }, // avoid grid lines overlapping
       },
     },
+  });
+
+  const getStats = (arr: number[]) => {
+    if (!arr || arr.length === 0) return { max: '-', min: '-' };
+    const validArr = arr.filter(v => v !== null && v !== undefined);
+    if (validArr.length === 0) return { max: '-', min: '-' };
+    return { max: Math.max(...validArr).toFixed(1), min: Math.min(...validArr).toFixed(1) };
   };
+
+  const corrStats = getStats(pumpData.corriente);
+  const tempStats = getStats(pumpData.temperatura);
+  const descStats = getStats(pumpData.presion_descarga);
+  const sucStats = getStats(pumpData.presion_succion);
 
   return (
     <Box sx={{ mt: 2 }}>
@@ -132,10 +158,16 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
       <Grid container spacing={3}>
         {/* Gráfico 1: Corriente vs Temperatura */}
         <Grid item xs={12} lg={6}>
-          <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 360, display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="subtitle2" sx={{ color: 'text.primary', mb: 1, fontWeight: 600 }}>
-              Esfuerzo Eléctrico vs Calentamiento Térmico
-            </Typography>
+          <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 380, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', fontWeight: 600 }}>
+                Esfuerzo Eléctrico vs Calentamiento Térmico
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', gap: 2 }}>
+                <span><b>Corriente:</b> Mín {corrStats.min}A | Máx {corrStats.max}A</span>
+                <span><b>Temperatura:</b> Mín {tempStats.min}°C | Máx {tempStats.max}°C</span>
+              </Typography>
+            </Box>
             <Box sx={{ flexGrow: 1, position: 'relative' }}>
               <Line 
                 data={{
@@ -164,7 +196,8 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
                     }
                   ]
                 }} 
-                options={commonOptions} 
+                }} 
+                options={getOptions('Corriente (A)', 'Temperatura (°C)')} 
               />
             </Box>
           </Paper>
@@ -172,10 +205,16 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
 
         {/* Gráfico 2: Presión Descarga vs Succión */}
         <Grid item xs={12} lg={6}>
-          <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 360, display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="subtitle2" sx={{ color: 'text.primary', mb: 1, fontWeight: 600 }}>
-              Dinámica de Fluidos (Presiones)
-            </Typography>
+          <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 380, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', fontWeight: 600 }}>
+                Dinámica de Fluidos (Presiones)
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', gap: 2 }}>
+                <span><b>P. Descarga:</b> Mín {descStats.min} PSI | Máx {descStats.max} PSI</span>
+                <span><b>P. Succión:</b> Mín {sucStats.min} inHg | Máx {sucStats.max} inHg</span>
+              </Typography>
+            </Box>
             <Box sx={{ flexGrow: 1, position: 'relative' }}>
               <Line 
                 data={{
@@ -204,7 +243,8 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
                     }
                   ]
                 }} 
-                options={commonOptions} 
+                }} 
+                options={getOptions('Descarga (PSI)', 'Succión (inHg)')} 
               />
             </Box>
           </Paper>
