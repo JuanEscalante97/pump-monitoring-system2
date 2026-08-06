@@ -173,11 +173,7 @@ def get_chart_data(
 
     measurements = query.order_by(Measurement.datetime_registro.asc()).all()
 
-    labels = []
-    temp_series = []
-    curr_series = []
-    p_suc_series = []
-    p_desc_series = []
+    pumps_data = {}
 
     def round_time_to_nearest_hour(t):
         if t.minute >= 30:
@@ -187,18 +183,25 @@ def get_chart_data(
 
     for m in measurements:
         bomba_code = m.bomba.codigo if m.bomba else f"Bomba {m.bomba_id}"
+        if bomba_code not in pumps_data:
+            pumps_data[bomba_code] = {
+                "labels": [],
+                "temperatura": [],
+                "corriente": [],
+                "presion_succion": [],
+                "presion_descarga": []
+            }
+        
         rounded_time = round_time_to_nearest_hour(m.hora_registro)
-        labels.append(f"{rounded_time} ({bomba_code})")
-        temp_series.append(m.temperatura_c)
-        curr_series.append(m.corriente_a)
-        p_suc_series.append(m.presion_succion_inhg)
-        p_desc_series.append(m.presion_descarga_psi)
+        # Avoid duplicate labels for the same hour by checking the last label
+        if not pumps_data[bomba_code]["labels"] or pumps_data[bomba_code]["labels"][-1] != rounded_time:
+            pumps_data[bomba_code]["labels"].append(rounded_time)
+            pumps_data[bomba_code]["temperatura"].append(m.temperatura_c)
+            pumps_data[bomba_code]["corriente"].append(m.corriente_a)
+            pumps_data[bomba_code]["presion_succion"].append(m.presion_succion_inhg)
+            pumps_data[bomba_code]["presion_descarga"].append(m.presion_descarga_psi)
 
     return {
-        "labels": labels,
-        "temperatura": temp_series,
-        "corriente": curr_series,
-        "presion_succion": p_suc_series,
-        "presion_descarga": p_desc_series,
+        "pumps": pumps_data,
         "count": len(measurements)
     }
