@@ -16,7 +16,7 @@ import {
 
 import { Activity, Clock, ShieldAlert, Check } from 'lucide-react';
 import { api } from '../api/client';
-import { Pump, Tank } from '../types';
+import { Pump, Tank, AlarmThreshold } from '../types';
 
 interface MeasurementModalProps {
   open: boolean;
@@ -35,6 +35,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
 }) => {
   const [pumps, setPumps] = useState<Pump[]>([]);
   const [tanks, setTanks] = useState<Tank[]>([]);
+  const [thresholds, setThresholds] = useState<AlarmThreshold[]>([]);
   const [bombaId, setBombaId] = useState<number>(selectedPumpId || 0);
   const [tanqueId, setTanqueId] = useState<number | ''>('');
   const [presionSuccion, setPresionSuccion] = useState<string>('4.5');
@@ -53,12 +54,14 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const [pRes, tRes] = await Promise.all([
+        const [pRes, tRes, thRes] = await Promise.all([
           api.get('/pumps'),
-          api.get('/tanks')
+          api.get('/tanks'),
+          api.get('/alarms/thresholds')
         ]);
         setPumps(pRes.data);
         setTanks(tRes.data);
+        setThresholds(thRes.data);
         
         if (open) {
           if (selectedPumpId) setBombaId(selectedPumpId);
@@ -106,8 +109,34 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
       const tempVal = parseFloat(temperatura);
       const tempBombaVal = parseFloat(temperaturaBomba);
       const currVal = parseFloat(corriente);
-      if (tempVal > 80.0 || (tempBombaVal && tempBombaVal > 80.0) || currVal > 45.0) {
-        setAlarmWarning('¡ADVERTENCIA DE SEGURIDAD! La lectura fue registrada pero ha sobrepasado los límites de alarma.');
+      const pSucVal = parseFloat(presionSuccion);
+      const pDescVal = parseFloat(presionDescarga);
+
+      let pumpThreshold = thresholds.find(t => t.bomba_id === Number(bombaId) && t.is_active);
+      if (!pumpThreshold) {
+        pumpThreshold = thresholds.find(t => t.bomba_id === null && t.is_active);
+      }
+
+      const tempMax = pumpThreshold?.temp_max_c ?? 80.0;
+      const currMax = pumpThreshold?.corriente_max_a ?? 45.0;
+      const pSucMin = pumpThreshold?.presion_suc_min_inhg ?? -10.0;
+      const pSucMax = pumpThreshold?.presion_suc_max_inhg ?? 30.0;
+      const pDescMin = pumpThreshold?.presion_desc_min_psi ?? 20.0;
+      const pDescMax = pumpThreshold?.presion_desc_max_psi ?? 150.0;
+
+      let isAlarm = false;
+      if (tempVal > tempMax || (tempBombaVal && tempBombaVal > tempMax) || currVal > currMax) {
+        isAlarm = true;
+      }
+      if (!isNaN(pSucVal) && (pSucVal < pSucMin || pSucVal > pSucMax)) {
+        isAlarm = true;
+      }
+      if (!isNaN(pDescVal) && (pDescVal < pDescMin || pDescVal > pDescMax)) {
+        isAlarm = true;
+      }
+
+      if (isAlarm) {
+        setAlarmWarning('¡ADVERTENCIA DE SEGURIDAD! La lectura fue registrada pero ha sobrepasado los límites de alarma configurados.');
       } else {
         setSaveSuccess(true);
       }

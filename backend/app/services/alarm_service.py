@@ -14,7 +14,7 @@ def evaluate_measurement_alarms(db: Session, measurement: Measurement):
     
     if not threshold:
         threshold = db.query(AlarmThreshold).filter(
-            AlarmThreshold.bomba_id == None,
+            AlarmThreshold.bomba_id.is_(None),
             AlarmThreshold.is_active == True
         ).first()
 

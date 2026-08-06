@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { Activity, Plus, AlertCircle, Clock, ShieldAlert } from 'lucide-react';
 import { api } from '../api/client';
-import { Operation, Measurement } from '../types';
+import { Operation, Measurement, AlarmThreshold } from '../types';
 import { BulkMeasurementModal } from '../components/BulkMeasurementModal';
 import { useAuth } from '../context/AuthContext';
 import { Checkbox } from '@mui/material';
@@ -29,6 +29,7 @@ export const Monitoring: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const { user } = useAuth();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [thresholds, setThresholds] = useState<AlarmThreshold[]>([]);
 
   const loadMonitoringData = async () => {
     try {
@@ -37,11 +38,16 @@ export const Monitoring: React.FC = () => {
       setActiveOp(currentOp);
 
       if (currentOp) {
-        const mRes = await api.get(`/measurements?operation_id=${currentOp.id}`);
+        const [mRes, tRes] = await Promise.all([
+          api.get(`/measurements?operation_id=${currentOp.id}`),
+          api.get('/alarms/thresholds')
+        ]);
         setMeasurements(mRes.data);
+        setThresholds(tRes.data);
         setSelectedIds([]);
       } else {
         setMeasurements([]);
+        setThresholds([]);
         setSelectedIds([]);
       }
     } catch (err) {
@@ -210,7 +216,29 @@ export const Monitoring: React.FC = () => {
                 </TableHead>
                 <TableBody>
                   {measurements.map((m) => {
-                    const isAlarm = m.temperatura_c > 80.0 || m.corriente_a > 45.0;
+                    let pumpThreshold = thresholds.find(t => t.bomba_id === m.bomba_id && t.is_active);
+                    if (!pumpThreshold) {
+                      pumpThreshold = thresholds.find(t => t.bomba_id === null && t.is_active);
+                    }
+                    
+                    const tempMax = pumpThreshold?.temp_max_c ?? 80.0;
+                    const currMax = pumpThreshold?.corriente_max_a ?? 45.0;
+                    const pSucMin = pumpThreshold?.presion_suc_min_inhg ?? -10.0;
+                    const pSucMax = pumpThreshold?.presion_suc_max_inhg ?? 30.0;
+                    const pDescMin = pumpThreshold?.presion_desc_min_psi ?? 20.0;
+                    const pDescMax = pumpThreshold?.presion_desc_max_psi ?? 150.0;
+                    
+                    let isAlarm = false;
+                    const isTempMotorAlarm = m.temperatura_c > tempMax;
+                    const isTempBombaAlarm = m.temperatura_bomba_c !== null && m.temperatura_bomba_c !== undefined && m.temperatura_bomba_c > tempMax;
+                    const isCurrAlarm = m.corriente_a > currMax;
+                    const isSucAlarm = m.presion_succion_inhg !== null && m.presion_succion_inhg !== undefined && (m.presion_succion_inhg < pSucMin || m.presion_succion_inhg > pSucMax);
+                    const isDescAlarm = m.presion_descarga_psi < pDescMin || m.presion_descarga_psi > pDescMax;
+                    
+                    if (isTempMotorAlarm || isTempBombaAlarm || isCurrAlarm || isSucAlarm || isDescAlarm) {
+                      isAlarm = true;
+                    }
+
                     const isSelected = selectedIds.includes(m.id);
                     return (
                       <TableRow key={m.id} selected={isSelected}>
@@ -230,15 +258,19 @@ export const Monitoring: React.FC = () => {
                           {m.bomba?.codigo}
                         </TableCell>
                         <TableCell>{m.tanque?.codigo || '-'}</TableCell>
-                        <TableCell>{m.presion_succion_inhg !== null && m.presion_succion_inhg !== undefined ? m.presion_succion_inhg : '-'}</TableCell>
-                        <TableCell>{m.presion_descarga_psi}</TableCell>
-                        <TableCell sx={{ color: m.temperatura_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
+                        <TableCell sx={{ color: isSucAlarm ? '#ef4444' : 'inherit', fontWeight: isSucAlarm ? 700 : 'normal' }}>
+                          {m.presion_succion_inhg !== null && m.presion_succion_inhg !== undefined ? m.presion_succion_inhg : '-'}
+                        </TableCell>
+                        <TableCell sx={{ color: isDescAlarm ? '#ef4444' : 'inherit', fontWeight: isDescAlarm ? 700 : 'normal' }}>
+                          {m.presion_descarga_psi}
+                        </TableCell>
+                        <TableCell sx={{ color: isTempMotorAlarm ? '#ef4444' : '#10b981', fontWeight: 700 }}>
                           {m.temperatura_c}
                         </TableCell>
-                        <TableCell sx={{ color: m.temperatura_bomba_c && m.temperatura_bomba_c > 80 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
+                        <TableCell sx={{ color: isTempBombaAlarm ? '#ef4444' : (m.temperatura_bomba_c ? '#10b981' : 'inherit'), fontWeight: 700 }}>
                           {m.temperatura_bomba_c ?? '-'}
                         </TableCell>
-                        <TableCell sx={{ color: m.corriente_a > 45 ? '#ef4444' : '#38bdf8', fontWeight: 700 }}>
+                        <TableCell sx={{ color: isCurrAlarm ? '#ef4444' : '#38bdf8', fontWeight: 700 }}>
                           {m.corriente_a}
                         </TableCell>
                         <TableCell>
