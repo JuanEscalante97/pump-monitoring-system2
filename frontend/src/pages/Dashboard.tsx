@@ -24,7 +24,7 @@ import { api } from '../api/client';
 import { DashboardKPIs, PIDProcessData } from '../types';
 import { PIDDiagram } from '../components/PIDDiagram';
 import { HistoryCharts } from '../components/Charts';
-import { MeasurementModal } from '../components/MeasurementModal';
+import { BulkMeasurementModal } from '../components/BulkMeasurementModal';
 
 export const Dashboard: React.FC = () => {
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null);
@@ -192,13 +192,13 @@ export const Dashboard: React.FC = () => {
         </Box>
       )}
 
-      {/* Measurement Modal */}
+      {/* Measurement Registration Modal */}
       {pidData?.active_operation && (
-        <MeasurementModal
+        <BulkMeasurementModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           operationId={pidData.active_operation.id}
-          selectedPumpId={selectedPumpId}
+          initialPumpId={selectedPumpId}
           onSuccess={loadDashboardData}
         />
       )}
