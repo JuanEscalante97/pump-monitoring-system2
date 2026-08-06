@@ -84,8 +84,8 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
           </Typography>
           <Grid container spacing={3}>
             {/* Temperature */}
-            <Grid item xs={12} md={6} lg={3}>
-              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
+            <Grid item xs={12} md={6} lg={6}>
+              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 320, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ flexGrow: 1, position: 'relative' }}>
                   <Line 
                     data={{
@@ -107,8 +107,8 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
             </Grid>
 
             {/* Current */}
-            <Grid item xs={12} md={6} lg={3}>
-              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
+            <Grid item xs={12} md={6} lg={6}>
+              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 320, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ flexGrow: 1, position: 'relative' }}>
                   <Line 
                     data={{
@@ -130,8 +130,8 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
             </Grid>
 
             {/* Suction Pressure */}
-            <Grid item xs={12} md={6} lg={3}>
-              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
+            <Grid item xs={12} md={6} lg={6}>
+              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 320, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ flexGrow: 1, position: 'relative' }}>
                   <Line 
                     data={{
@@ -153,8 +153,8 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
             </Grid>
 
             {/* Discharge Pressure */}
-            <Grid item xs={12} md={6} lg={3}>
-              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
+            <Grid item xs={12} md={6} lg={6}>
+              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 320, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ flexGrow: 1, position: 'relative' }}>
                   <Line 
                     data={{
