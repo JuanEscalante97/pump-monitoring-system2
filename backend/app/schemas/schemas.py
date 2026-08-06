@@ -184,6 +184,13 @@ class MeasurementBase(BaseModel):
 class MeasurementCreate(MeasurementBase):
     operation_id: int
 
+class MeasurementBulkItem(MeasurementBase):
+    pass
+
+class MeasurementBulkCreate(BaseModel):
+    operation_id: int
+    measurements: List[MeasurementBulkItem]
+
 class MeasurementCorrection(BaseModel):
     presion_succion_inhg: Optional[float] = None
     presion_descarga_psi: float

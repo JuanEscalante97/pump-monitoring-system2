@@ -17,7 +17,7 @@ import {
 import { Activity, Plus, AlertCircle, Clock, ShieldAlert } from 'lucide-react';
 import { api } from '../api/client';
 import { Operation, Measurement } from '../types';
-import { MeasurementModal } from '../components/MeasurementModal';
+import { BulkMeasurementModal } from '../components/BulkMeasurementModal';
 import { useAuth } from '../context/AuthContext';
 import { Checkbox } from '@mui/material';
 import { Trash2 } from 'lucide-react';
@@ -266,11 +266,14 @@ export const Monitoring: React.FC = () => {
           </Paper>
 
           {/* Modal */}
-          <MeasurementModal
+          <BulkMeasurementModal
             open={modalOpen}
             onClose={() => setModalOpen(false)}
             operationId={activeOp.id}
-            onSuccess={loadMonitoringData}
+            onSuccess={() => {
+              setModalOpen(false);
+              loadMonitoringData();
+            }}
           />
         </Box>
       )}

@@ -3,6 +3,7 @@ import { Box, Paper, Typography, Chip, Button, Tooltip, Grid } from '@mui/materi
 import { useNavigate } from 'react-router-dom';
 import { Database as TankIcon, Gauge, Ship, ArrowRight, Activity, AlertTriangle, CheckCircle2, Zap } from 'lucide-react';
 import { PIDProcessData, PumpLatestStatus } from '../types';
+import { BulkMeasurementModal } from './BulkMeasurementModal';
 
 interface PIDDiagramProps {
   data: PIDProcessData | null;
@@ -11,6 +12,9 @@ interface PIDDiagramProps {
 
 export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) => {
   const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [selectedPumpId, setSelectedPumpId] = React.useState<number | undefined>();
+
   if (!data) return null;
 
   const activeOp = data.active_operation;
@@ -161,7 +165,8 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
                       if (status_indicator === 'ALARM' || status_indicator === 'WARNING') {
                         navigate('/alarms');
                       } else {
-                        onSelectPump(pump.id);
+                        setSelectedPumpId(pump.id);
+                        setModalOpen(true);
                       }
                     }}
                     sx={{
@@ -311,6 +316,19 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
           </Paper>
         </Grid>
       </Grid>
+      
+      {activeOp && (
+        <BulkMeasurementModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          operationId={activeOp.id}
+          initialPumpId={selectedPumpId}
+          onSuccess={() => {
+            setModalOpen(false);
+            window.location.reload(); // Simple reload to refresh diagram
+          }}
+        />
+      )}
     </Paper>
   );
 };

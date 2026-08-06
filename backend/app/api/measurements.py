@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.models.models import Measurement, Operation, Pump, User
-from app.schemas.schemas import MeasurementCreate, MeasurementCorrection, MeasurementResponse
+from app.schemas.schemas import MeasurementCreate, MeasurementCorrection, MeasurementResponse, MeasurementBulkCreate
 from app.core.security import get_current_user
 from app.core.audit import log_audit_action, get_client_ip
 from datetime import timedelta, timezone
@@ -86,6 +86,65 @@ def create_measurement(
     )
 
     return measurement
+
+@router.post("/bulk", response_model=List[MeasurementResponse], status_code=status.HTTP_201_CREATED)
+def create_bulk_measurements(
+    request: Request,
+    bulk_in: MeasurementBulkCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    operation = db.query(Operation).filter(Operation.id == bulk_in.operation_id).first()
+    if not operation or operation.estado != "Activa":
+        raise HTTPException(
+            status_code=400,
+            detail="No se pueden registrar mediciones si no existe una operación activa."
+        )
+
+    tz_peru = timezone(timedelta(hours=-5))
+    now_dt = datetime.now(tz_peru).replace(tzinfo=None)
+
+    inspection = update_inspection_on_measurement(db, operation.id, now_dt)
+
+    measurements_created = []
+    total_alarms = 0
+
+    for m_in in bulk_in.measurements:
+        measurement = Measurement(
+            operation_id=operation.id,
+            bomba_id=m_in.bomba_id,
+            tanque_id=m_in.tanque_id,
+            inspection_id=inspection.id if inspection else None,
+            presion_succion_inhg=m_in.presion_succion_inhg,
+            presion_descarga_psi=m_in.presion_descarga_psi,
+            temperatura_c=m_in.temperatura_c,
+            temperatura_bomba_c=m_in.temperatura_bomba_c,
+            corriente_a=m_in.corriente_a,
+            observaciones=m_in.observaciones,
+            tecnico_mecanico=m_in.tecnico_mecanico,
+            registrado_por_id=current_user.id,
+            fecha_registro=now_dt.date(),
+            hora_registro=now_dt.time(),
+            datetime_registro=now_dt,
+            is_corrected=False
+        )
+        db.add(measurement)
+        measurements_created.append(measurement)
+
+    db.commit()
+
+    for measurement in measurements_created:
+        db.refresh(measurement)
+        alarms = evaluate_measurement_alarms(db, measurement)
+        total_alarms += len(alarms)
+
+    log_audit_action(
+        db, current_user, "CREATE_BULK_MEASUREMENT", "Measurement", bulk_in.operation_id,
+        get_client_ip(request), 
+        f"Registro masivo: {len(measurements_created)} mediciones. Alertas={total_alarms}"
+    )
+
+    return measurements_created
 
 @router.put("/{measurement_id}/correct", response_model=MeasurementResponse)
 def correct_measurement(
