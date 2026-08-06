@@ -74,8 +74,23 @@ def get_pid_diagram_data(
     active_op = db.query(Operation).filter(Operation.estado == "Activa").first()
     
     if active_op:
-        # PUMPS: Distinct pumps that have measurements in this active operation
-        pumps_list = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == active_op.id).distinct().all()
+        # Obtain the absolute latest measurement for the entire operation
+        latest_op_m = db.query(Measurement).filter(
+            Measurement.operation_id == active_op.id
+        ).order_by(Measurement.datetime_registro.desc()).first()
+
+        if latest_op_m:
+            from datetime import timedelta
+            # Threshold: Show only pumps that have been registered in the last 90 minutes
+            cutoff_time = latest_op_m.datetime_registro - timedelta(minutes=90)
+            
+            pumps_list = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(
+                Measurement.operation_id == active_op.id,
+                Measurement.datetime_registro >= cutoff_time
+            ).distinct().all()
+        else:
+            # No measurements yet, show no active pumps
+            pumps_list = []
     else:
         pumps_list = []
 
