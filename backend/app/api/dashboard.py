@@ -56,35 +56,42 @@ def get_dashboard_kpis(
             temp_prom = corr_prom = p_suc_prom = p_desc_prom = 0.0
 
         # Calcular ETA Dinámico
-        dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == active_op.id).distinct().all()
-        dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == active_op.id).distinct().all()
-        
-        caudal_total = sum((p.caudal_nominal_m3h or 0) for p in dynamic_pumps)
-        capacidad_total = sum((t.capacidad_m3 or 0) for t in dynamic_tanks)
-        
-        if caudal_total > 0 and capacidad_total > 0:
-            # 1. Obtener Hora de Inicio
-            inicio_dt = datetime.combine(active_op.fecha, active_op.hora_inicio).replace(tzinfo=tz_peru)
-            hora_inicio_op = inicio_dt.strftime("%H:%M")
+        try:
+            dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == active_op.id).distinct().all()
+            dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == active_op.id).distinct().all()
             
-            # 2. Calcular Tiempo Transcurrido
-            now_dt = datetime.now(tz_peru)
-            horas_transcurridas = (now_dt - inicio_dt).total_seconds() / 3600.0
-            if horas_transcurridas < 0:
-                horas_transcurridas = 0
-                
-            # 3. Calcular Volumen Restante
-            volumen_bombeado = horas_transcurridas * caudal_total
-            volumen_restante = capacidad_total - volumen_bombeado
-            if volumen_restante < 0:
-                volumen_restante = 0
-                
-            # 4. Calcular Tiempo Restante y Hora de Fin
-            tiempo_restante = volumen_restante / caudal_total
-            tiempo_restante_horas = round(tiempo_restante, 2)
+            caudal_total = sum((p.caudal_nominal_m3h or 0) for p in dynamic_pumps)
+            capacidad_total = sum((t.capacidad_m3 or 0) for t in dynamic_tanks)
             
-            fin_dt = now_dt + timedelta(hours=tiempo_restante)
-            hora_fin_estimada = fin_dt.strftime("%H:%M")
+            if caudal_total > 0 and capacidad_total > 0:
+                # 1. Obtener Hora de Inicio
+                hora_inicio = active_op.hora_inicio or datetime.min.time()
+                inicio_dt = datetime.combine(active_op.fecha, hora_inicio).replace(tzinfo=tz_peru)
+                hora_inicio_op = inicio_dt.strftime("%H:%M")
+                
+                # 2. Calcular Tiempo Transcurrido
+                now_dt = datetime.now(tz_peru)
+                horas_transcurridas = (now_dt - inicio_dt).total_seconds() / 3600.0
+                if horas_transcurridas < 0:
+                    horas_transcurridas = 0
+                    
+                # 3. Calcular Volumen Restante
+                volumen_bombeado = horas_transcurridas * caudal_total
+                volumen_restante = capacidad_total - volumen_bombeado
+                if volumen_restante < 0:
+                    volumen_restante = 0
+                    
+                # 4. Calcular Tiempo Restante y Hora de Fin
+                tiempo_restante = volumen_restante / caudal_total
+                tiempo_restante_horas = round(tiempo_restante, 2)
+                
+                fin_dt = now_dt + timedelta(hours=tiempo_restante)
+                hora_fin_estimada = fin_dt.strftime("%H:%M")
+        except Exception as e:
+            print(f"Error calculando ETA: {e}")
+            tiempo_restante_horas = None
+            hora_inicio_op = None
+            hora_fin_estimada = None
     else:
         total_mediciones = 0
         temp_prom = corr_prom = p_suc_prom = p_desc_prom = 0.0
