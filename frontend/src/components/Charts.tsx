@@ -10,6 +10,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
+import { useTheme } from '@mui/material/styles';
 import { Line } from 'react-chartjs-2';
 import { Box, Paper, Typography, Grid } from '@mui/material';
 
@@ -39,6 +40,8 @@ interface ChartsProps {
 }
 
 export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
+  const theme = useTheme();
+
   if (!data || !data.pumps || Object.keys(data.pumps).length === 0) return null;
 
   const commonOptions = {
@@ -48,26 +51,26 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
       legend: {
         position: 'top' as const,
         labels: {
-          color: '#cbd5e1',
+          color: theme.palette.text.secondary,
           font: { family: 'Inter', size: 12 },
         },
       },
       tooltip: {
-        backgroundColor: '#0f172a',
-        titleColor: '#f8fafc',
-        bodyColor: '#e2e8f0',
-        borderColor: '#334155',
+        backgroundColor: theme.palette.background.paper,
+        titleColor: theme.palette.text.primary,
+        bodyColor: theme.palette.text.secondary,
+        borderColor: theme.palette.divider,
         borderWidth: 1,
       },
     },
     scales: {
       x: {
-        ticks: { color: '#94a3b8', font: { size: 11 } },
-        grid: { color: '#1e293b' },
+        ticks: { color: theme.palette.text.secondary, font: { size: 11 } },
+        grid: { color: theme.palette.divider },
       },
       y: {
-        ticks: { color: '#94a3b8', font: { size: 11 } },
-        grid: { color: '#1e293b' },
+        ticks: { color: theme.palette.text.secondary, font: { size: 11 } },
+        grid: { color: theme.palette.divider },
       },
     },
   };
@@ -82,7 +85,7 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
           <Grid container spacing={3}>
             {/* Temperature */}
             <Grid item xs={12} md={6} lg={3}>
-              <Paper sx={{ p: 2, backgroundColor: '#0f172a', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
+              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ flexGrow: 1, position: 'relative' }}>
                   <Line 
                     data={{
@@ -105,7 +108,7 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
 
             {/* Current */}
             <Grid item xs={12} md={6} lg={3}>
-              <Paper sx={{ p: 2, backgroundColor: '#0f172a', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
+              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ flexGrow: 1, position: 'relative' }}>
                   <Line 
                     data={{
@@ -128,7 +131,7 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
 
             {/* Suction Pressure */}
             <Grid item xs={12} md={6} lg={3}>
-              <Paper sx={{ p: 2, backgroundColor: '#0f172a', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
+              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ flexGrow: 1, position: 'relative' }}>
                   <Line 
                     data={{
@@ -151,7 +154,7 @@ export const HistoryCharts: React.FC<ChartsProps> = ({ data }) => {
 
             {/* Discharge Pressure */}
             <Grid item xs={12} md={6} lg={3}>
-              <Paper sx={{ p: 2, backgroundColor: '#0f172a', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
+              <Paper sx={{ p: 2, backgroundColor: 'background.paper', borderRadius: 3, height: 250, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ flexGrow: 1, position: 'relative' }}>
                   <Line 
                     data={{

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { theme } from './theme/theme';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { CustomThemeProvider } from './context/ThemeContext';
 
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
@@ -68,11 +69,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-
 export const App: React.FC = () => {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <CustomThemeProvider>
       <ErrorBoundary>
         <AuthProvider>
           <BrowserRouter>
@@ -102,7 +101,7 @@ export const App: React.FC = () => {
           </BrowserRouter>
         </AuthProvider>
       </ErrorBoundary>
-    </ThemeProvider>
+    </CustomThemeProvider>
   );
 };
 

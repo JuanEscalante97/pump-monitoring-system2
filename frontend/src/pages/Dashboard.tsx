@@ -9,6 +9,7 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   Activity,
   Workflow,
@@ -27,6 +28,7 @@ import { HistoryCharts } from '../components/Charts';
 import { BulkMeasurementModal } from '../components/BulkMeasurementModal';
 
 export const Dashboard: React.FC = () => {
+  const theme = useTheme();
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null);
   const [pidData, setPidData] = useState<PIDProcessData | null>(null);
   const [chartData, setChartData] = useState<any>(null);
@@ -162,15 +164,15 @@ export const Dashboard: React.FC = () => {
 
         {/* Card 4: Avg Current */}
         <Grid item xs={12} sm={6} md={4}>
-          <Paper sx={{ p: 2.5, backgroundColor: '#0f172a', borderRadius: 3, borderLeft: '4px solid #10b981' }}>
+          <Paper sx={{ p: 2.5, backgroundColor: 'background.paper', borderRadius: 3, borderLeft: `4px solid ${theme.palette.success.main}` }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>CORRIENTE PROMEDIO</Typography>
-              <Zap size={20} color="#10b981" />
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>CORRIENTE PROMEDIO</Typography>
+              <Zap size={20} color={theme.palette.success.main} />
             </Box>
-            <Typography variant="h4" sx={{ color: '#f8fafc', fontWeight: 700, mt: 1 }}>
+            <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 700, mt: 1 }}>
               {kpis?.operaciones_activas && kpis.operaciones_activas > 0 ? (kpis?.corriente_promedio || 0) : 0} A
             </Typography>
-            <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               Límite Máximo: 45.0 A
             </Typography>
           </Paper>
@@ -185,7 +187,7 @@ export const Dashboard: React.FC = () => {
       {/* Historical Performance Charts */}
       {pidData?.active_operation && chartData && (
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h5" sx={{ color: '#f8fafc', fontWeight: 700, mb: 2, fontFamily: 'Chakra Petch' }}>
+          <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 700, mb: 2, fontFamily: 'Chakra Petch' }}>
             TENDENCIAS DE CONDICIÓN EN TIEMPO REAL
           </Typography>
           <HistoryCharts data={chartData} />

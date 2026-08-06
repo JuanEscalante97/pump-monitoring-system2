@@ -104,12 +104,46 @@ def generate_operation_pdf_report(db: Session, operation: Operation) -> io.Bytes
     story.append(t_info)
     story.append(Spacer(1, 15))
 
-    # 3. Measurement Records Table
-    story.append(Paragraph("REGISTRO DETALLADO DE MEDICIONES DE CAMPO", heading_style))
-
     measurements = db.query(Measurement).filter(
         Measurement.operation_id == operation.id
     ).order_by(Measurement.datetime_registro.asc()).all()
+
+    if measurements:
+        max_temp = max([m.temperatura_c for m in measurements])
+        max_curr = max([m.corriente_a for m in measurements])
+        first_temp = measurements[0].temperatura_c
+        last_temp = measurements[-1].temperatura_c
+        temp_delta = last_temp - first_temp
+        
+        tendencia_txt = "ESTABLE"
+        if temp_delta > 10:
+            tendencia_txt = "INCREMENTO ACELERADO (Riesgo de Sobrecalentamiento)"
+        elif temp_delta < -10:
+            tendencia_txt = "ENFRIAMIENTO RÁPIDO"
+        
+        story.append(Paragraph("RESUMEN DE ANÁLISIS PREDICTIVO", heading_style))
+        predictive_data = [
+            [
+                Paragraph(f"<b>Temperatura Máxima Alcanzada:</b> {max_temp:.1f} °C", cell_style),
+                Paragraph(f"<b>Corriente Máxima Alcanzada:</b> {max_curr:.1f} A", cell_style)
+            ],
+            [
+                Paragraph(f"<b>Diferencial Térmico (Inicio - Fin):</b> {temp_delta:+.1f} °C", cell_style),
+                Paragraph(f"<b>Tendencia Calculada:</b> {tendencia_txt}", cell_style)
+            ]
+        ]
+        t_pred = Table(predictive_data, colWidths=[360, 360])
+        t_pred.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#e0f2fe')),
+            ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#bae6fd')),
+            ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#7dd3fc')),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        story.append(t_pred)
+        story.append(Spacer(1, 15))
+
+    # 3. Measurement Records Table
+    story.append(Paragraph("REGISTRO DETALLADO DE MEDICIONES DE CAMPO", heading_style))
 
     table_data = [
         [

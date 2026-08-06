@@ -34,8 +34,11 @@ import {
   Radio,
   Workflow,
   Ship,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useThemeContext } from '../context/ThemeContext';
 
 const drawerWidth = 260;
 
@@ -165,16 +168,19 @@ export const Layout: React.FC = () => {
     </Box>
   );
 
+  const { mode, toggleColorMode } = useThemeContext();
+
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0b0f19', overflowX: 'hidden' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: 'background.default', overflowX: 'hidden' }}>
       {/* AppBar */}
       <AppBar
         position="fixed"
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          backgroundColor: '#0f172a',
-          borderBottom: '1px solid #26334d',
+          backgroundColor: 'background.paper',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
           boxShadow: 'none',
         }}
       >
@@ -189,23 +195,29 @@ export const Layout: React.FC = () => {
             >
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" component="div" sx={{ fontWeight: 600, color: '#f8fafc', fontSize: { xs: '0.85rem', sm: '1.1rem' }, lineHeight: 1.2 }}>
+            <Typography variant="h6" component="div" sx={{ fontWeight: 600, color: 'text.primary', fontSize: { xs: '0.85rem', sm: '1.1rem' }, lineHeight: 1.2 }}>
               Monitoreo de Condición de Bombas<br/>TLT-ILO
             </Typography>
 
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Tooltip title={mode === 'dark' ? 'Cambiar a Modo Día' : 'Cambiar a Modo Noche'}>
+              <IconButton onClick={toggleColorMode} color="inherit" sx={{ border: '1px solid', borderColor: 'divider', color: 'text.primary' }}>
+                {mode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+              </IconButton>
+            </Tooltip>
+
             <Chip
               label={user?.role || 'Mantenimiento'}
               color="primary"
               size="small"
-              sx={{ fontWeight: 600, backgroundColor: 'rgba(49, 130, 206, 0.2)', color: '#63b3ed', border: '1px solid #3182ce' }}
+              sx={{ fontWeight: 600, backgroundColor: 'rgba(49, 130, 206, 0.2)', color: '#3182ce', border: '1px solid #3182ce' }}
             />
 
             <Tooltip title="Cuenta de Usuario">
-              <IconButton onClick={handleMenuOpen} size="small" sx={{ p: 0.5, border: '1px solid #334155' }}>
-                <Avatar sx={{ width: 34, height: 34, bgcolor: '#3182ce', fontSize: '0.9rem', fontWeight: 700 }}>
+              <IconButton onClick={handleMenuOpen} size="small" sx={{ p: 0.5, border: '1px solid', borderColor: 'divider' }}>
+                <Avatar sx={{ width: 34, height: 34, bgcolor: '#3182ce', color: '#fff', fontSize: '0.9rem', fontWeight: 700 }}>
                   {(user && typeof user.full_name === 'string' && user.full_name.length > 0) ? user.full_name.charAt(0) : 'M'}
                 </Avatar>
               </IconButton>
@@ -216,14 +228,14 @@ export const Layout: React.FC = () => {
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
               PaperProps={{
-                sx: { backgroundColor: '#1e293b', border: '1px solid #334155', minWidth: 200, mt: 1 },
+                sx: { backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider', minWidth: 200, mt: 1 },
               }}
             >
               <Box sx={{ px: 2, py: 1.5 }}>
-                <Typography variant="subtitle2" sx={{ color: '#f8fafc', fontWeight: 600 }}>
+                <Typography variant="subtitle2" sx={{ color: 'text.primary', fontWeight: 600 }}>
                   {user?.full_name || 'Usuario Mantenimiento'}
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   @{user?.username || 'mantenimiento'}
                 </Typography>
               </Box>

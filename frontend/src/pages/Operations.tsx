@@ -20,7 +20,7 @@ import {
   Checkbox,
   TableContainer,
 } from '@mui/material';
-import { Plus, Square, Trash2 } from 'lucide-react';
+import { Plus, Square, Trash2, FileSpreadsheet } from 'lucide-react';
 import { api } from '../api/client';
 import { Operation, Vessel, Product } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -146,6 +146,23 @@ export const Operations: React.FC = () => {
     );
   };
 
+  const handleDownloadReport = async (id: number) => {
+    try {
+      const response = await api.get(`/reports/operation/${id}/pdf`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Reporte_Cierre_OP_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (err: any) {
+      alert('Error al descargar el reporte PDF');
+    }
+  };
+
   const activeOp = operations.find((o) => o.estado === 'Activa');
 
   return (
@@ -264,6 +281,17 @@ export const Operations: React.FC = () => {
                           onClick={() => handleFinishOperation(op.id)}
                         >
                           Finalizar
+                        </Button>
+                      )}
+                      {op.estado === 'Finalizada' && (
+                        <Button
+                          variant="outlined"
+                          color="info"
+                          size="small"
+                          startIcon={<FileSpreadsheet size={14} />}
+                          onClick={() => handleDownloadReport(op.id)}
+                        >
+                          Análisis (PDF)
                         </Button>
                       )}
                       {user?.role === 'Administrador' && (
