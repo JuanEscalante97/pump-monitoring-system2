@@ -271,7 +271,6 @@ export const Monitoring: React.FC = () => {
             onClose={() => setModalOpen(false)}
             operationId={activeOp.id}
             onSuccess={() => {
-              setModalOpen(false);
               loadMonitoringData();
             }}
           />

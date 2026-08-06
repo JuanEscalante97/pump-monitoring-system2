@@ -324,8 +324,7 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
           operationId={activeOp.id}
           initialPumpId={selectedPumpId}
           onSuccess={() => {
-            setModalOpen(false);
-            window.location.reload(); // Simple reload to refresh diagram
+            // Solo se actualizan datos en background o se deja que el operario cierre con el botón
           }}
         />
       )}
