@@ -214,6 +214,40 @@ def finish_operation(
 
     return build_operation_response(db, operation)
 
+@router.put("/{operation_id}/restore", response_model=OperationResponse)
+def restore_operation(
+    operation_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "Administrador":
+        raise HTTPException(status_code=403, detail="Solo los Administradores pueden restablecer operaciones")
+        
+    operation = db.query(Operation).filter(Operation.id == operation_id).first()
+    if not operation:
+        raise HTTPException(status_code=404, detail="Operación no encontrada")
+    if operation.estado == "Activa":
+        raise HTTPException(status_code=400, detail="La operación ya está activa")
+        
+    active_op = db.query(Operation).filter(Operation.estado == "Activa").first()
+    if active_op:
+        raise HTTPException(status_code=400, detail="Ya existe otra operación activa. Por favor finalízala antes de restablecer esta.")
+
+    operation.hora_fin = None
+    operation.fecha_fin = None
+    operation.estado = "Activa"
+
+    db.commit()
+    db.refresh(operation)
+
+    log_audit_action(
+        db, current_user, "RESTORE_OPERATION", "Operation", operation.id,
+        get_client_ip(request), f"Operación restablecida: {operation.codigo_operacion}"
+    )
+
+    return build_operation_response(db, operation)
+
 @router.delete("/{operation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_operation(
     operation_id: int,

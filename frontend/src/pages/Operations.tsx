@@ -20,7 +20,7 @@ import {
   Checkbox,
   TableContainer,
 } from '@mui/material';
-import { Plus, Square, Trash2, Edit } from 'lucide-react';
+import { Plus, Square, Trash2, Edit, RefreshCcw } from 'lucide-react';
 import { api } from '../api/client';
 import { Operation, Vessel, Product } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -168,6 +168,18 @@ export const Operations: React.FC = () => {
     }
   };
 
+  const handleRestore = async (id: number) => {
+    if (!window.confirm('¿Está seguro de que desea restablecer esta operación? Se volverá a activar en el panel principal.')) {
+      return;
+    }
+    try {
+      await api.put(`/operations/${id}/restore`);
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error al restablecer la operación');
+    }
+  };
+
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       setSelectedIds(operations.map(op => op.id));
@@ -299,6 +311,17 @@ export const Operations: React.FC = () => {
                           onClick={() => handleFinishOperation(op.id)}
                         >
                           Finalizar
+                        </Button>
+                      )}
+                      {op.estado === 'Finalizada' && user?.role === 'Administrador' && (
+                        <Button
+                          variant="outlined"
+                          color="success"
+                          size="small"
+                          startIcon={<RefreshCcw size={14} />}
+                          onClick={() => handleRestore(op.id)}
+                        >
+                          Restablecer
                         </Button>
                       )}
                       {user?.role === 'Administrador' && (
