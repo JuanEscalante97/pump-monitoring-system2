@@ -38,6 +38,10 @@ def get_dashboard_kpis(
     hora_fin_estimada = None
     is_paused = False
     bombas_trabajando = 0
+    temp_prom = 0.0
+    corr_prom = 0.0
+    p_suc_prom = 0.0
+    p_desc_prom = 0.0
 
     if active_op:
         pausas_general = db.query(OperationPause).filter(OperationPause.operation_id == active_op.id).all()
@@ -55,6 +59,8 @@ def get_dashboard_kpis(
                     else:
                         dt_reg = latest_op_m.datetime_registro
                         
+                    # Eliminar tzinfo para comparaciones seguras
+                    dt_reg = dt_reg.replace(tzinfo=None)
                     cutoff_time = dt_reg - timedelta(minutes=5)
                     
                     all_m = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
@@ -63,6 +69,8 @@ def get_dashboard_kpis(
                         m_time = m.datetime_registro
                         if isinstance(m_time, str):
                             m_time = dt_mod.datetime.fromisoformat(m_time.replace('Z', '+00:00'))
+                        
+                        m_time = m_time.replace(tzinfo=None)
                         if m_time >= cutoff_time:
                             active_pump_ids.add(m.bomba_id)
                             
@@ -185,6 +193,7 @@ def get_pid_diagram_data(
                     else:
                         dt_reg = latest_op_m.datetime_registro
                         
+                    dt_reg = dt_reg.replace(tzinfo=None)
                     cutoff_time = dt_reg - timedelta(minutes=5)
                     
                     all_m = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
@@ -193,6 +202,8 @@ def get_pid_diagram_data(
                         m_time = m.datetime_registro
                         if isinstance(m_time, str):
                             m_time = dt_mod.datetime.fromisoformat(m_time.replace('Z', '+00:00'))
+                        
+                        m_time = m_time.replace(tzinfo=None)
                         if m_time >= cutoff_time:
                             active_pump_ids.add(m.bomba_id)
                             
