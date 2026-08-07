@@ -67,6 +67,8 @@ def get_dashboard_kpis(
                     active_pump_ids = set()
                     for m in all_m:
                         m_time = m.datetime_registro
+                        if m_time is None:
+                            continue
                         if isinstance(m_time, str):
                             m_time = dt_mod.datetime.fromisoformat(m_time.replace('Z', '+00:00'))
                         
@@ -200,6 +202,8 @@ def get_pid_diagram_data(
                     active_pump_ids = set()
                     for m in all_m:
                         m_time = m.datetime_registro
+                        if m_time is None:
+                            continue
                         if isinstance(m_time, str):
                             m_time = dt_mod.datetime.fromisoformat(m_time.replace('Z', '+00:00'))
                         

@@ -223,7 +223,7 @@ class MeasurementResponse(MeasurementBase):
     registrado_por_id: int
     fecha_registro: date
     hora_registro: time
-    datetime_registro: datetime
+    datetime_registro: Optional[datetime] = None
     is_corrected: bool
     corregido_motivo: Optional[str] = None
     bomba: Optional[PumpResponse] = None
