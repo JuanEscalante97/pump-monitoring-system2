@@ -168,13 +168,26 @@ def get_pid_diagram_data(
 
         if latest_op_m and not is_paused:
             from datetime import timedelta
-            # Threshold: Show only pumps that have been registered in the last batch (within 5 minutes of the absolute latest measurement)
-            cutoff_time = latest_op_m.datetime_registro - timedelta(minutes=5)
+            import datetime as dt_mod
             
-            pumps_list = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(
-                Measurement.operation_id == active_op.id,
-                Measurement.datetime_registro >= cutoff_time
-            ).distinct().all()
+            try:
+                if latest_op_m.datetime_registro:
+                    if isinstance(latest_op_m.datetime_registro, str):
+                        dt_reg = dt_mod.datetime.fromisoformat(latest_op_m.datetime_registro.replace('Z', '+00:00'))
+                    else:
+                        dt_reg = latest_op_m.datetime_registro
+                        
+                    cutoff_time = dt_reg - timedelta(minutes=5)
+                    
+                    pumps_list = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(
+                        Measurement.operation_id == active_op.id,
+                        Measurement.datetime_registro >= cutoff_time
+                    ).distinct().all()
+                else:
+                    pumps_list = []
+            except Exception as e:
+                print(f"Error calculando PID pumps_list: {e}")
+                pumps_list = []
         else:
             # No measurements yet, show no active pumps
             pumps_list = []
