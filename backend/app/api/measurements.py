@@ -58,7 +58,7 @@ def create_measurement(
     ).first()
     
     if active_pause:
-        active_pause.fin_corte = func.now()
+        active_pause.fin_corte = now_dt
         db.commit()
 
     # Update scheduled inspection status and calculate delay automatically
@@ -120,7 +120,7 @@ def create_bulk_measurements(
         OperationPause.fin_corte == None
     ).first()
     if active_pause:
-        active_pause.fin_corte = func.now()
+        active_pause.fin_corte = now_dt
         db.commit()
 
     inspection = update_inspection_on_measurement(db, operation.id, now_dt)
