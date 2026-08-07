@@ -54,11 +54,19 @@ def get_dashboard_kpis(
                         dt_reg = dt_mod.datetime.fromisoformat(latest_op_m.datetime_registro.replace('Z', '+00:00'))
                     else:
                         dt_reg = latest_op_m.datetime_registro
+                        
                     cutoff_time = dt_reg - timedelta(minutes=5)
-                    bombas_trabajando = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(
-                        Measurement.operation_id == active_op.id,
-                        Measurement.datetime_registro >= cutoff_time
-                    ).distinct().count()
+                    
+                    all_m = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
+                    active_pump_ids = set()
+                    for m in all_m:
+                        m_time = m.datetime_registro
+                        if isinstance(m_time, str):
+                            m_time = dt_mod.datetime.fromisoformat(m_time.replace('Z', '+00:00'))
+                        if m_time >= cutoff_time:
+                            active_pump_ids.add(m.bomba_id)
+                            
+                    bombas_trabajando = len(active_pump_ids)
             except Exception as e:
                 print(f"Error calculando bombas_trabajando: {e}")
                 bombas_trabajando = 0
@@ -179,10 +187,19 @@ def get_pid_diagram_data(
                         
                     cutoff_time = dt_reg - timedelta(minutes=5)
                     
-                    pumps_list = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(
-                        Measurement.operation_id == active_op.id,
-                        Measurement.datetime_registro >= cutoff_time
-                    ).distinct().all()
+                    all_m = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
+                    active_pump_ids = set()
+                    for m in all_m:
+                        m_time = m.datetime_registro
+                        if isinstance(m_time, str):
+                            m_time = dt_mod.datetime.fromisoformat(m_time.replace('Z', '+00:00'))
+                        if m_time >= cutoff_time:
+                            active_pump_ids.add(m.bomba_id)
+                            
+                    if active_pump_ids:
+                        pumps_list = db.query(Pump).filter(Pump.id.in_(active_pump_ids)).all()
+                    else:
+                        pumps_list = []
                 else:
                     pumps_list = []
             except Exception as e:
