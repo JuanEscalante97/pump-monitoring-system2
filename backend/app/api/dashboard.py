@@ -25,13 +25,6 @@ def get_dashboard_kpis(
     # Active operations
     operaciones_activas = db.query(Operation).filter(Operation.estado == "Activa").count()
 
-    # Active working pumps
-    active_op = db.query(Operation).filter(Operation.estado == "Activa").first()
-    if active_op:
-        bombas_trabajando = db.query(Pump).join(Measurement).filter(Measurement.operation_id == active_op.id).distinct().count()
-    else:
-        bombas_trabajando = 0
-
     # Scheduled inspections
     inspecciones_pendientes = db.query(ScheduledInspection).filter(ScheduledInspection.estado == "Pendiente").count()
     inspecciones_atrasadas = db.query(ScheduledInspection).filter(ScheduledInspection.estado == "Retrasado").count()
@@ -44,12 +37,22 @@ def get_dashboard_kpis(
     hora_inicio_op = None
     hora_fin_estimada = None
     is_paused = False
+    bombas_trabajando = 0
 
     if active_op:
         pausas_general = db.query(OperationPause).filter(OperationPause.operation_id == active_op.id).all()
         for p in pausas_general:
             if p.fin_corte is None:
                 is_paused = True
+
+        if not is_paused:
+            latest_op_m = db.query(Measurement).filter(Measurement.operation_id == active_op.id).order_by(Measurement.datetime_registro.desc()).first()
+            if latest_op_m:
+                cutoff_time = latest_op_m.datetime_registro - timedelta(minutes=5)
+                bombas_trabajando = db.query(Pump).join(Measurement).filter(
+                    Measurement.operation_id == active_op.id,
+                    Measurement.datetime_registro >= cutoff_time
+                ).distinct().count()
 
         active_measurements = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
         total_mediciones = len(active_measurements)
@@ -108,7 +111,8 @@ def get_dashboard_kpis(
                 tiempo_restante_horas = round(tiempo_restante, 2)
                 
                 if is_paused:
-                    hora_fin_estimada = "En Pausa"
+                    hora_fin_estimada = "-"
+                    tiempo_restante_horas = None
                 else:
                     fin_dt = now_dt + timedelta(hours=tiempo_restante)
                     hora_fin_estimada = fin_dt.strftime("%H:%M")

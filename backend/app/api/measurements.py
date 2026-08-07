@@ -2,6 +2,7 @@ from typing import List, Optional
 from datetime import datetime, date
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.database.session import get_db
 from app.models.models import Measurement, Operation, OperationPause, Pump, User
 from app.schemas.schemas import MeasurementCreate, MeasurementCorrection, MeasurementResponse, MeasurementBulkCreate
@@ -57,7 +58,7 @@ def create_measurement(
     ).first()
     
     if active_pause:
-        active_pause.fin_corte = datetime.now(timezone.utc)
+        active_pause.fin_corte = func.now()
         db.commit()
 
     # Update scheduled inspection status and calculate delay automatically
@@ -113,6 +114,14 @@ def create_bulk_measurements(
 
     tz_peru = timezone(timedelta(hours=-5))
     now_dt = datetime.now(tz_peru).replace(tzinfo=None)
+
+    active_pause = db.query(OperationPause).filter(
+        OperationPause.operation_id == operation.id, 
+        OperationPause.fin_corte == None
+    ).first()
+    if active_pause:
+        active_pause.fin_corte = func.now()
+        db.commit()
 
     inspection = update_inspection_on_measurement(db, operation.id, now_dt)
 

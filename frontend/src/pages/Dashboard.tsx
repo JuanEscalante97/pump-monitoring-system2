@@ -135,16 +135,7 @@ export const Dashboard: React.FC = () => {
 
           {pidData?.active_operation ? (
             <>
-              <Button
-                fullWidth={false}
-                variant={kpis?.is_paused ? "contained" : "outlined"}
-                color={kpis?.is_paused ? "success" : "warning"}
-                startIcon={kpis?.is_paused ? <PlayCircle size={18} /> : <PauseCircle size={18} />}
-                onClick={handleTogglePause}
-                sx={!kpis?.is_paused ? { borderColor: '#f59e0b', color: '#f59e0b', flex: { xs: '1 1 45%', sm: 'none' } } : { flex: { xs: '1 1 45%', sm: 'none' } }}
-              >
-                {kpis?.is_paused ? "Reanudar Bombeo" : "Cortar Bombeo"}
-              </Button>
+
               <Button
                 fullWidth={false}
                 variant="outlined"
@@ -232,7 +223,7 @@ export const Dashboard: React.FC = () => {
               <Clock size={20} color={theme.palette.warning.main} />
             </Box>
             <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 700, mt: 1 }}>
-              {kpis?.is_paused ? 'PAUSADA' : (kpis?.tiempo_restante_horas !== null && kpis?.tiempo_restante_horas !== undefined ? `${kpis.tiempo_restante_horas} hrs` : '-')}
+              {kpis?.is_paused ? '-' : (kpis?.tiempo_restante_horas !== null && kpis?.tiempo_restante_horas !== undefined ? `${kpis.tiempo_restante_horas} hrs` : '-')}
             </Typography>
             <Typography variant="caption" sx={{ color: kpis?.is_paused ? '#f59e0b' : 'text.secondary', display: 'block', mt: 0.5, fontWeight: kpis?.is_paused ? 600 : 400 }}>
               {kpis?.is_paused ? 'No hay bombeo activo' : (kpis?.hora_inicio_op && kpis?.hora_fin_estimada 
