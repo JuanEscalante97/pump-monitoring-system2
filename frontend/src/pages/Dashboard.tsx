@@ -20,6 +20,8 @@ import {
   AlertTriangle,
   PlusCircle,
   RefreshCw,
+  PauseCircle,
+  PlayCircle,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { DashboardKPIs, PIDProcessData } from '../types';
@@ -72,6 +74,21 @@ export const Dashboard: React.FC = () => {
   }, []);
 
 
+  const handleTogglePause = async () => {
+    if (!pidData?.active_operation) return;
+    try {
+      if (kpis?.is_paused) {
+        await api.post(`/operations/${pidData.active_operation.id}/resume`);
+      } else {
+        await api.post(`/operations/${pidData.active_operation.id}/pause`);
+      }
+      loadDashboardData();
+    } catch (err: any) {
+      console.error('Error al cambiar estado de pausa:', err);
+      setErrorMsg(err.response?.data?.detail || 'Error al cambiar estado de bombeo.');
+    }
+  };
+
   const handleOpenModal = (pumpId?: number) => {
     setSelectedPumpId(pumpId);
     setModalOpen(true);
@@ -112,14 +129,26 @@ export const Dashboard: React.FC = () => {
           </Button>
 
           {pidData?.active_operation ? (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<PlusCircle size={18} />}
-              onClick={() => handleOpenModal()}
-            >
-              Registrar Medición
-            </Button>
+            <>
+              <Button
+                variant={kpis?.is_paused ? "contained" : "outlined"}
+                color={kpis?.is_paused ? "success" : "warning"}
+                startIcon={kpis?.is_paused ? <PlayCircle size={18} /> : <PauseCircle size={18} />}
+                onClick={handleTogglePause}
+                sx={!kpis?.is_paused ? { borderColor: '#f59e0b', color: '#f59e0b' } : {}}
+              >
+                {kpis?.is_paused ? "Reanudar Bombeo" : "Cortar Bombeo"}
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                disabled={kpis?.is_paused}
+                startIcon={<PlusCircle size={18} />}
+                onClick={() => handleOpenModal()}
+              >
+                Registrar Medición
+              </Button>
+            </>
           ) : (
             <Button variant="contained" color="warning" href="/operations">
               Iniciar Nueva Operación
@@ -186,12 +215,12 @@ export const Dashboard: React.FC = () => {
               <Clock size={20} color={theme.palette.warning.main} />
             </Box>
             <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 700, mt: 1 }}>
-              {kpis?.tiempo_restante_horas !== null && kpis?.tiempo_restante_horas !== undefined ? `${kpis.tiempo_restante_horas} hrs` : '-'}
+              {kpis?.is_paused ? 'PAUSADA' : (kpis?.tiempo_restante_horas !== null && kpis?.tiempo_restante_horas !== undefined ? `${kpis.tiempo_restante_horas} hrs` : '-')}
             </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
-              {kpis?.hora_inicio_op && kpis?.hora_fin_estimada 
+            <Typography variant="caption" sx={{ color: kpis?.is_paused ? '#f59e0b' : 'text.secondary', display: 'block', mt: 0.5, fontWeight: kpis?.is_paused ? 600 : 400 }}>
+              {kpis?.is_paused ? 'No hay bombeo activo' : (kpis?.hora_inicio_op && kpis?.hora_fin_estimada 
                 ? `Inició: ${kpis.hora_inicio_op} | Fin: ${kpis.hora_fin_estimada}`
-                : 'Estimado de vaciado'}
+                : 'Estimado de vaciado')}
             </Typography>
           </Paper>
         </Grid>

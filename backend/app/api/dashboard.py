@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database.session import get_db
-from app.models.models import Operation, Measurement, ScheduledInspection, Pump, AlarmEvent, Tank, Product, Vessel, AlarmThreshold
+from app.models.models import Operation, Measurement, ScheduledInspection, Pump, AlarmEvent, OperationPause, Tank, Product, Vessel, AlarmThreshold
 from app.schemas.schemas import (
     DashboardKPIs, PIDProcessData, PumpLatestStatus, PumpResponse,
     MeasurementResponse, OperationResponse, TankResponse, VesselResponse, ProductResponse
@@ -74,9 +74,23 @@ def get_dashboard_kpis(
                 inicio_dt = datetime.combine(active_op.fecha, hora_inicio).replace(tzinfo=tz_peru)
                 hora_inicio_op = inicio_dt.strftime("%H:%M")
                 
-                # 2. Calcular Tiempo Transcurrido
+                # 2. Calcular Tiempo Transcurrido (Descontando Pausas)
                 now_dt = datetime.now(tz_peru)
-                horas_transcurridas = (now_dt - inicio_dt).total_seconds() / 3600.0
+                
+                pausas = db.query(OperationPause).filter(OperationPause.operation_id == active_op.id).all()
+                tiempo_pausa_segundos = 0
+                is_paused = False
+                for p in pausas:
+                    if p.fin_corte is None:
+                        is_paused = True
+                    inicio = p.inicio_corte.astimezone(tz_peru) if p.inicio_corte.tzinfo else p.inicio_corte.replace(tzinfo=tz_peru)
+                    if p.fin_corte:
+                        fin = p.fin_corte.astimezone(tz_peru) if p.fin_corte.tzinfo else p.fin_corte.replace(tzinfo=tz_peru)
+                    else:
+                        fin = now_dt
+                    tiempo_pausa_segundos += max(0, (fin - inicio).total_seconds())
+
+                horas_transcurridas = ((now_dt - inicio_dt).total_seconds() - tiempo_pausa_segundos) / 3600.0
                 if horas_transcurridas < 0:
                     horas_transcurridas = 0
                     
@@ -90,8 +104,11 @@ def get_dashboard_kpis(
                 tiempo_restante = volumen_restante / caudal_total
                 tiempo_restante_horas = round(tiempo_restante, 2)
                 
-                fin_dt = now_dt + timedelta(hours=tiempo_restante)
-                hora_fin_estimada = fin_dt.strftime("%H:%M")
+                if is_paused:
+                    hora_fin_estimada = "En Pausa"
+                else:
+                    fin_dt = now_dt + timedelta(hours=tiempo_restante)
+                    hora_fin_estimada = fin_dt.strftime("%H:%M")
         except Exception as e:
             print(f"Error calculando ETA: {e}")
             tiempo_restante_horas = None
@@ -113,7 +130,8 @@ def get_dashboard_kpis(
         total_mediciones_hoy=total_mediciones_hoy,
         tiempo_restante_horas=tiempo_restante_horas,
         hora_inicio_op=hora_inicio_op,
-        hora_fin_estimada=hora_fin_estimada
+        hora_fin_estimada=hora_fin_estimada,
+        is_paused=is_paused
     )
 
 @router.get("/pid-diagram", response_model=PIDProcessData)

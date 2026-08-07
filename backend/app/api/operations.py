@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.database.session import get_db
-from app.models.models import Operation, Tank, Pump, Vessel, Product, User, ScheduledInspection, Measurement
+from app.models.models import Operation, Tank, Pump, Vessel, Product, User, ScheduledInspection, Measurement, OperationPause
 from app.schemas.schemas import OperationCreate, OperationResponse, TankResponse, PumpResponse
 from app.core.security import get_current_user
 from app.core.audit import log_audit_action, get_client_ip
@@ -248,4 +248,67 @@ def delete_operation(
         db, current_user, "DELETE_OPERATION", "Operation", operation_id,
         get_client_ip(request), f"Operación eliminada: {codigo}"
     )
-    return None
+
+@router.post("/{operation_id}/pause", response_model=OperationResponse)
+def pause_operation(
+    request: Request,
+    operation_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    operation = db.query(Operation).filter(Operation.id == operation_id).first()
+    if not operation:
+        raise HTTPException(status_code=404, detail="Operación no encontrada")
+    if operation.estado == "Finalizada":
+        raise HTTPException(status_code=400, detail="No se puede pausar una operación finalizada")
+        
+    # Check if there's already an active pause
+    active_pause = db.query(OperationPause).filter(
+        OperationPause.operation_id == operation_id, 
+        OperationPause.fin_corte.is_(None)
+    ).first()
+    
+    if active_pause:
+        raise HTTPException(status_code=400, detail="La operación ya se encuentra en pausa")
+        
+    new_pause = OperationPause(operation_id=operation_id)
+    db.add(new_pause)
+    db.commit()
+    db.refresh(operation)
+    
+    log_audit_action(
+        db, current_user, "PAUSE_OPERATION", "Operation", operation.id,
+        get_client_ip(request), f"Corte de bombeo iniciado para la operación: {operation.codigo_operacion}"
+    )
+    
+    return build_operation_response(db, operation)
+
+@router.post("/{operation_id}/resume", response_model=OperationResponse)
+def resume_operation(
+    request: Request,
+    operation_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    operation = db.query(Operation).filter(Operation.id == operation_id).first()
+    if not operation:
+        raise HTTPException(status_code=404, detail="Operación no encontrada")
+        
+    active_pause = db.query(OperationPause).filter(
+        OperationPause.operation_id == operation_id, 
+        OperationPause.fin_corte.is_(None)
+    ).first()
+    
+    if not active_pause:
+        raise HTTPException(status_code=400, detail="La operación no está en pausa")
+        
+    active_pause.fin_corte = func.now()
+    db.commit()
+    db.refresh(operation)
+    
+    log_audit_action(
+        db, current_user, "RESUME_OPERATION", "Operation", operation.id,
+        get_client_ip(request), f"Bombeo reanudado para la operación: {operation.codigo_operacion}"
+    )
+    
+    return build_operation_response(db, operation)

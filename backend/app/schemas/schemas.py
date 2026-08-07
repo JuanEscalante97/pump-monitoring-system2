@@ -152,6 +152,15 @@ class ScheduledInspectionResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class OperationPauseResponse(BaseModel):
+    id: int
+    operation_id: int
+    inicio_corte: datetime
+    fin_corte: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
 class OperationResponse(BaseModel):
     id: int
     codigo_operacion: str
@@ -171,6 +180,7 @@ class OperationResponse(BaseModel):
     tanks: List[TankResponse] = []
     pumps: List[PumpResponse] = []
     scheduled_inspections: List[ScheduledInspectionResponse] = []
+    pauses: List[OperationPauseResponse] = []
 
     class Config:
         from_attributes = True
@@ -270,6 +280,7 @@ class DashboardKPIs(BaseModel):
     tiempo_restante_horas: Optional[float] = None
     hora_inicio_op: Optional[str] = None
     hora_fin_estimada: Optional[str] = None
+    is_paused: bool = False
 
 class PumpLatestStatus(BaseModel):
     pump: PumpResponse

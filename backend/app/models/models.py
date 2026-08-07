@@ -114,6 +114,17 @@ class AlarmThreshold(Base):
     # Relationships
     bomba = relationship("Pump", back_populates="thresholds")
 
+class OperationPause(Base):
+    __tablename__ = "operation_pauses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    operation_id = Column(Integer, ForeignKey("operations.id"), nullable=False)
+    inicio_corte = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    fin_corte = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    operation = relationship("Operation", back_populates="pauses")
+
 class Operation(Base):
     __tablename__ = "operations"
 
@@ -139,6 +150,7 @@ class Operation(Base):
     scheduled_inspections = relationship("ScheduledInspection", back_populates="operation", cascade="all, delete-orphan")
     measurements = relationship("Measurement", back_populates="operation", cascade="all, delete-orphan")
     alarm_events = relationship("AlarmEvent", back_populates="operacion")
+    pauses = relationship("OperationPause", back_populates="operation", cascade="all, delete-orphan")
 
 class ScheduledInspection(Base):
     __tablename__ = "scheduled_inspections"

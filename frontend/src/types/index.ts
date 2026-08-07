@@ -150,6 +150,7 @@ export interface DashboardKPIs {
   tiempo_restante_horas?: number | null;
   hora_inicio_op?: string | null;
   hora_fin_estimada?: string | null;
+  is_paused?: boolean;
 }
 
 export interface PumpLatestStatus {
