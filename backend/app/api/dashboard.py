@@ -12,7 +12,7 @@ from app.schemas.schemas import (
 
 from app.core.security import get_current_user
 
-router = APIRouter(prefix="/api/dashboard", tags=["Dashboard & Analítica"])
+router = APIRouter(prefix="/api/dashboard", tags=["Dashboard & Anal├¡tica"])
 
 @router.get("/kpis", response_model=DashboardKPIs)
 def get_dashboard_kpis(
@@ -24,6 +24,13 @@ def get_dashboard_kpis(
 
     # Active operations
     operaciones_activas = db.query(Operation).filter(Operation.estado == "Activa").count()
+
+    # Active working pumps
+    active_op = db.query(Operation).filter(Operation.estado == "Activa").first()
+    if active_op:
+        bombas_trabajando = db.query(Pump).join(Measurement).filter(Measurement.operation_id == active_op.id).distinct().count()
+    else:
+        bombas_trabajando = 0
 
     # Scheduled inspections
     inspecciones_pendientes = db.query(ScheduledInspection).filter(ScheduledInspection.estado == "Pendiente").count()
@@ -37,49 +44,12 @@ def get_dashboard_kpis(
     hora_inicio_op = None
     hora_fin_estimada = None
     is_paused = False
-    bombas_trabajando = 0
-    temp_prom = 0.0
-    corr_prom = 0.0
-    p_suc_prom = 0.0
-    p_desc_prom = 0.0
 
     if active_op:
         pausas_general = db.query(OperationPause).filter(OperationPause.operation_id == active_op.id).all()
         for p in pausas_general:
             if p.fin_corte is None:
                 is_paused = True
-
-        if not is_paused:
-            try:
-                latest_op_m = db.query(Measurement).filter(Measurement.operation_id == active_op.id).order_by(Measurement.datetime_registro.desc()).first()
-                if latest_op_m and latest_op_m.datetime_registro:
-                    import datetime as dt_mod
-                    if isinstance(latest_op_m.datetime_registro, str):
-                        dt_reg = dt_mod.datetime.fromisoformat(latest_op_m.datetime_registro.replace('Z', '+00:00'))
-                    else:
-                        dt_reg = latest_op_m.datetime_registro
-                        
-                    # Eliminar tzinfo para comparaciones seguras
-                    dt_reg = dt_reg.replace(tzinfo=None)
-                    cutoff_time = dt_reg - timedelta(minutes=5)
-                    
-                    all_m = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
-                    active_pump_ids = set()
-                    for m in all_m:
-                        m_time = m.datetime_registro
-                        if m_time is None:
-                            continue
-                        if isinstance(m_time, str):
-                            m_time = dt_mod.datetime.fromisoformat(m_time.replace('Z', '+00:00'))
-                        
-                        m_time = m_time.replace(tzinfo=None)
-                        if m_time >= cutoff_time:
-                            active_pump_ids.add(m.bomba_id)
-                            
-                    bombas_trabajando = len(active_pump_ids)
-            except Exception as e:
-                print(f"Error calculando bombas_trabajando: {e}")
-                bombas_trabajando = 0
 
         active_measurements = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
         total_mediciones = len(active_measurements)
@@ -96,7 +66,7 @@ def get_dashboard_kpis(
         else:
             temp_prom = corr_prom = p_suc_prom = p_desc_prom = 0.0
 
-        # Calcular ETA Dinámico
+        # Calcular ETA Din├ímico
         try:
             dynamic_pumps = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(Measurement.operation_id == active_op.id).distinct().all()
             dynamic_tanks = db.query(Tank).join(Measurement, Tank.id == Measurement.tanque_id).filter(Measurement.operation_id == active_op.id).distinct().all()
@@ -186,40 +156,13 @@ def get_pid_diagram_data(
 
         if latest_op_m and not is_paused:
             from datetime import timedelta
-            import datetime as dt_mod
+            # Threshold: Show only pumps that have been registered in the last batch (within 5 minutes of the absolute latest measurement)
+            cutoff_time = latest_op_m.datetime_registro - timedelta(minutes=5)
             
-            try:
-                if latest_op_m.datetime_registro:
-                    if isinstance(latest_op_m.datetime_registro, str):
-                        dt_reg = dt_mod.datetime.fromisoformat(latest_op_m.datetime_registro.replace('Z', '+00:00'))
-                    else:
-                        dt_reg = latest_op_m.datetime_registro
-                        
-                    dt_reg = dt_reg.replace(tzinfo=None)
-                    cutoff_time = dt_reg - timedelta(minutes=5)
-                    
-                    all_m = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
-                    active_pump_ids = set()
-                    for m in all_m:
-                        m_time = m.datetime_registro
-                        if m_time is None:
-                            continue
-                        if isinstance(m_time, str):
-                            m_time = dt_mod.datetime.fromisoformat(m_time.replace('Z', '+00:00'))
-                        
-                        m_time = m_time.replace(tzinfo=None)
-                        if m_time >= cutoff_time:
-                            active_pump_ids.add(m.bomba_id)
-                            
-                    if active_pump_ids:
-                        pumps_list = db.query(Pump).filter(Pump.id.in_(active_pump_ids)).all()
-                    else:
-                        pumps_list = []
-                else:
-                    pumps_list = []
-            except Exception as e:
-                print(f"Error calculando PID pumps_list: {e}")
-                pumps_list = []
+            pumps_list = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(
+                Measurement.operation_id == active_op.id,
+                Measurement.datetime_registro >= cutoff_time
+            ).distinct().all()
         else:
             # No measurements yet, show no active pumps
             pumps_list = []
@@ -238,7 +181,7 @@ def get_pid_diagram_data(
         if last_m and last_m.tanque_id:
             active_tank_ids.add(last_m.tanque_id)
 
-        # Determine status indicator (🟢 NORMAL, 🟡 WARNING, 🔴 ALARM)
+        # Determine status indicator (­ƒƒó NORMAL, ­ƒƒí WARNING, ­ƒö┤ ALARM)
         status_ind = "NORMAL"
         active_alarms = db.query(AlarmEvent).filter(
             AlarmEvent.bomba_id == p.id,
@@ -285,8 +228,8 @@ def get_chart_data(
     current_user = Depends(get_current_user)
 ):
     """
-    Retorna datos de series de tiempo para gráficos de Succión, Descarga, Temp y Corriente.
-    Soporta filtros por Rango de Fecha, Operación, Bomba, Producto y Buque.
+    Retorna datos de series de tiempo para gr├íficos de Succi├│n, Descarga, Temp y Corriente.
+    Soporta filtros por Rango de Fecha, Operaci├│n, Bomba, Producto y Buque.
     """
     query = db.query(Measurement).join(Operation)
 
