@@ -3,7 +3,7 @@ from datetime import datetime, date
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.database.session import get_db
-from app.models.models import Measurement, Operation, Pump, User
+from app.models.models import Measurement, Operation, OperationPause, Pump, User
 from app.schemas.schemas import MeasurementCreate, MeasurementCorrection, MeasurementResponse, MeasurementBulkCreate
 from app.core.security import get_current_user
 from app.core.audit import log_audit_action, get_client_ip
@@ -49,6 +49,16 @@ def create_measurement(
     # Automatic Server Date and Time capture (UTC-5 for Peru)
     tz_peru = timezone(timedelta(hours=-5))
     now_dt = datetime.now(tz_peru).replace(tzinfo=None)
+
+    # Auto-resume si hay una pausa o término activo
+    active_pause = db.query(OperationPause).filter(
+        OperationPause.operation_id == operation.id,
+        OperationPause.fin_corte == None
+    ).first()
+    
+    if active_pause:
+        active_pause.fin_corte = datetime.now(timezone.utc)
+        db.commit()
 
     # Update scheduled inspection status and calculate delay automatically
     inspection = update_inspection_on_measurement(db, operation.id, now_dt)

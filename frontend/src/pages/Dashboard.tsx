@@ -131,41 +131,37 @@ export const Dashboard: React.FC = () => {
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' } }}>
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<RefreshCw size={18} />}
-            onClick={loadDashboardData}
-            sx={{ borderColor: '#334155', color: '#cbd5e1' }}
-          >
-            Actualizar
-          </Button>
+        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'center', sm: 'flex-end' } }}>
 
           {pidData?.active_operation ? (
             <>
               <Button
+                fullWidth={false}
                 variant={kpis?.is_paused ? "contained" : "outlined"}
                 color={kpis?.is_paused ? "success" : "warning"}
                 startIcon={kpis?.is_paused ? <PlayCircle size={18} /> : <PauseCircle size={18} />}
                 onClick={handleTogglePause}
-                sx={!kpis?.is_paused ? { borderColor: '#f59e0b', color: '#f59e0b' } : {}}
+                sx={!kpis?.is_paused ? { borderColor: '#f59e0b', color: '#f59e0b', flex: { xs: '1 1 45%', sm: 'none' } } : { flex: { xs: '1 1 45%', sm: 'none' } }}
               >
                 {kpis?.is_paused ? "Reanudar Bombeo" : "Cortar Bombeo"}
               </Button>
               <Button
+                fullWidth={false}
                 variant="outlined"
                 color="error"
                 startIcon={<StopCircle size={18} />}
                 onClick={handleFinishOperation}
+                sx={{ flex: { xs: '1 1 45%', sm: 'none' } }}
               >
                 Término
               </Button>
               <Button
+                fullWidth={false}
                 variant="contained"
                 color="primary"
                 startIcon={<PlusCircle size={18} />}
                 onClick={() => handleOpenModal()}
+                sx={{ flex: { xs: '1 1 100%', sm: 'none' } }}
               >
                 Registrar Medición
               </Button>
@@ -191,7 +187,7 @@ export const Dashboard: React.FC = () => {
               {kpis?.operaciones_activas || 0}
             </Typography>
             <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 600 }}>
-              {kpis?.bombas_trabajando || 0} Bombas Reportadas
+              {kpis?.bombas_trabajando || 0} Bombas en Operación
             </Typography>
           </Paper>
         </Grid>

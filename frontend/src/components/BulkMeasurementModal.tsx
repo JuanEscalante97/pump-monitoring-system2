@@ -137,7 +137,7 @@ export const BulkMeasurementModal: React.FC<BulkMeasurementModalProps> = ({
         const t = tanks.find(x => x.id === fd.tanqueId);
         const bStr = p?.codigo || '-';
         const tStr = t ? ` | "${t.codigo}"` : '';
-        const pSuc = fd.presionSuccion.trim() === '' ? 'N/A' : `${fd.presionSuccion} inHg`;
+        const pSuc = fd.presionSuccion.trim() === '' ? 'N/A' : `${fd.presionSuccion} ${parseFloat(fd.presionSuccion) < 0 ? 'inHg' : 'PSI'}`;
         const tBom = fd.temperaturaBomba.trim() === '' ? 'N/A' : `${fd.temperaturaBomba} °C`;
         text += `Bomba: ${bStr}${tStr}\n`;
         text += `P. Descarga: ${fd.presionDescarga} PSI | P. Succión: ${pSuc}\n`;
@@ -241,7 +241,7 @@ export const BulkMeasurementModal: React.FC<BulkMeasurementModalProps> = ({
                       </TextField>
                     </Grid>
                     <Grid item xs={6} sm={4}>
-                      <TextField fullWidth size="small" type="number" inputProps={{ step: '0.1' }} label="P. Succión" value={fd.presionSuccion} onChange={(e) => updateForm(pid, 'presionSuccion', e.target.value)} InputProps={{ endAdornment: <InputAdornment position="end">inHg</InputAdornment> }} />
+                      <TextField fullWidth size="small" type="number" inputProps={{ step: '0.1' }} label="P. Succión" value={fd.presionSuccion} onChange={(e) => updateForm(pid, 'presionSuccion', e.target.value)} InputProps={{ endAdornment: <InputAdornment position="end">{fd.presionSuccion && parseFloat(fd.presionSuccion) < 0 ? 'inHg' : 'PSI'}</InputAdornment> }} />
                     </Grid>
                     <Grid item xs={6} sm={4}>
                       <TextField fullWidth size="small" required type="number" inputProps={{ step: '0.1' }} label="P. Descarga" value={fd.presionDescarga} onChange={(e) => updateForm(pid, 'presionDescarga', e.target.value)} InputProps={{ endAdornment: <InputAdornment position="end">psi</InputAdornment> }} />

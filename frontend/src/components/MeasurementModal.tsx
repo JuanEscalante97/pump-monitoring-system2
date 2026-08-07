@@ -145,7 +145,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
       const selTanque = tanks.find(t => t.id === Number(tanqueId));
       const bombaStr = selBomba?.codigo || '-';
       const tanqueStr = selTanque?.codigo ? ` | "${selTanque.codigo}"` : '';
-      const pSuccStr = presionSuccion.trim() === '' || isNaN(parseFloat(presionSuccion)) ? 'N/A' : `${presionSuccion} inHg`;
+      const pSuccStr = presionSuccion.trim() === '' || isNaN(parseFloat(presionSuccion)) ? 'N/A' : `${presionSuccion} ${parseFloat(presionSuccion) < 0 ? 'inHg' : 'PSI'}`;
       const tempBombaStr = temperaturaBomba.trim() === '' || isNaN(parseFloat(temperaturaBomba)) ? 'N/A' : `${temperaturaBomba} °C`;
 
       const repText = `Reporte de Embarque\n\n` +
@@ -267,7 +267,7 @@ export const MeasurementModal: React.FC<MeasurementModalProps> = ({
                 value={presionSuccion}
                 onChange={(e) => setPresionSuccion(e.target.value)}
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">inHg</InputAdornment>,
+                  endAdornment: <InputAdornment position="end">{presionSuccion && parseFloat(presionSuccion) < 0 ? 'inHg' : 'PSI'}</InputAdornment>,
                 }}
               />
             </Grid>

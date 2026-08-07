@@ -150,7 +150,10 @@ def get_pid_diagram_data(
             Measurement.operation_id == active_op.id
         ).order_by(Measurement.datetime_registro.desc()).first()
 
-        if latest_op_m:
+        pausas_general = db.query(OperationPause).filter(OperationPause.operation_id == active_op.id).all()
+        is_paused = any(p.fin_corte is None for p in pausas_general)
+
+        if latest_op_m and not is_paused:
             from datetime import timedelta
             # Threshold: Show only pumps that have been registered in the last batch (within 5 minutes of the absolute latest measurement)
             cutoff_time = latest_op_m.datetime_registro - timedelta(minutes=5)

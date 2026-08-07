@@ -71,7 +71,9 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
 
       {/* Flow Canvas Grid */}
       <Grid container spacing={3} alignItems="center">
-        {/* STEP 1: TANKS AREA */}
+        {data.pumps_status && data.pumps_status.length > 0 && (
+          <>
+            {/* STEP 1: TANKS AREA */}
         <Grid item xs={12} md={3}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: 1 }}>
@@ -285,9 +287,11 @@ export const PIDDiagram: React.FC<PIDDiagramProps> = ({ data, onSelectPump }) =>
             <ArrowRight size={20} color={isOpActive ? '#00b4d8' : '#334155'} />
           </Box>
         </Grid>
+          </>
+        )}
 
         {/* STEP 3: VESSEL DESTINATION */}
-        <Grid item xs={12} md={2}>
+        <Grid item xs={12} md={data.pumps_status && data.pumps_status.length > 0 ? 2 : 12}>
           <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: 1, mb: 2 }}>
              BUQUE DESTINO
           </Typography>
