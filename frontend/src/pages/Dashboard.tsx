@@ -22,6 +22,7 @@ import {
   RefreshCw,
   PauseCircle,
   PlayCircle,
+  StopCircle,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { DashboardKPIs, PIDProcessData } from '../types';
@@ -89,6 +90,19 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const handleFinishOperation = async () => {
+    if (!pidData?.active_operation) return;
+    if (window.confirm('¿Confirmas el TÉRMINO DE BOMBEO? Esto finalizará la operación actual.')) {
+      try {
+        await api.put(`/operations/${pidData.active_operation.id}/finish`);
+        loadDashboardData();
+      } catch (err: any) {
+        console.error('Error al finalizar operación:', err);
+        setErrorMsg(err.response?.data?.detail || 'Error al finalizar operación.');
+      }
+    }
+  };
+
   const handleOpenModal = (pumpId?: number) => {
     setSelectedPumpId(pumpId);
     setModalOpen(true);
@@ -138,6 +152,14 @@ export const Dashboard: React.FC = () => {
                 sx={!kpis?.is_paused ? { borderColor: '#f59e0b', color: '#f59e0b' } : {}}
               >
                 {kpis?.is_paused ? "Reanudar Bombeo" : "Cortar Bombeo"}
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<StopCircle size={18} />}
+                onClick={handleFinishOperation}
+              >
+                Término
               </Button>
               <Button
                 variant="contained"

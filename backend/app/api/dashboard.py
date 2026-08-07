@@ -43,8 +43,14 @@ def get_dashboard_kpis(
     tiempo_restante_horas = None
     hora_inicio_op = None
     hora_fin_estimada = None
+    is_paused = False
 
     if active_op:
+        pausas_general = db.query(OperationPause).filter(OperationPause.operation_id == active_op.id).all()
+        for p in pausas_general:
+            if p.fin_corte is None:
+                is_paused = True
+
         active_measurements = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
         total_mediciones = len(active_measurements)
         if total_mediciones > 0:
@@ -79,10 +85,7 @@ def get_dashboard_kpis(
                 
                 pausas = db.query(OperationPause).filter(OperationPause.operation_id == active_op.id).all()
                 tiempo_pausa_segundos = 0
-                is_paused = False
                 for p in pausas:
-                    if p.fin_corte is None:
-                        is_paused = True
                     inicio = p.inicio_corte.astimezone(tz_peru) if p.inicio_corte.tzinfo else p.inicio_corte.replace(tzinfo=tz_peru)
                     if p.fin_corte:
                         fin = p.fin_corte.astimezone(tz_peru) if p.fin_corte.tzinfo else p.fin_corte.replace(tzinfo=tz_peru)
