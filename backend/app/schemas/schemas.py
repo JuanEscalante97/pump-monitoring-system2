@@ -209,6 +209,8 @@ class MeasurementBulkCreate(BaseModel):
     measurements: List[MeasurementBulkItem]
 
 class MeasurementCorrection(BaseModel):
+    bomba_id: Optional[int] = None
+    tanque_id: Optional[int] = None
     presion_succion_inhg: Optional[float] = None
     presion_descarga_psi: float
     temperatura_c: float

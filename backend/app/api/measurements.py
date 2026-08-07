@@ -187,6 +187,11 @@ def correct_measurement(
     )
 
     # Update values
+    if corr_in.bomba_id is not None:
+        measurement.bomba_id = corr_in.bomba_id
+    if corr_in.tanque_id is not None:
+        measurement.tanque_id = corr_in.tanque_id
+        
     measurement.presion_succion_inhg = corr_in.presion_succion_inhg
     measurement.presion_descarga_psi = corr_in.presion_descarga_psi
     measurement.temperatura_c = corr_in.temperatura_c

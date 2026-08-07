@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import { History as HistoryIcon, Search, Edit3, ShieldAlert, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
-import { Measurement, Pump, Vessel, Product } from '../types';
+import { Measurement, Pump, Vessel, Product, Tank } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 export const History: React.FC = () => {
@@ -31,6 +31,7 @@ export const History: React.FC = () => {
   const [pumps, setPumps] = useState<Pump[]>([]);
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [tanks, setTanks] = useState<Tank[]>([]);
 
   // Filter states
   const [fecha, setFecha] = useState('');
@@ -45,6 +46,8 @@ export const History: React.FC = () => {
   const [temp, setTemp] = useState('');
   const [tempBomba, setTempBomba] = useState('');
   const [corr, setCorr] = useState('');
+  const [editBombaId, setEditBombaId] = useState('');
+  const [editTanqueId, setEditTanqueId] = useState('');
   const [motivo, setMotivo] = useState('');
   const [corrError, setCorrError] = useState<string | null>(null);
 
@@ -52,14 +55,16 @@ export const History: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [pRes, vRes, prRes] = await Promise.all([
+      const [pRes, vRes, prRes, tRes] = await Promise.all([
         api.get('/pumps'),
         api.get('/vessels'),
         api.get('/products'),
+        api.get('/tanks'),
       ]);
       setPumps(pRes.data);
       setVessels(vRes.data);
       setProducts(prRes.data);
+      setTanks(tRes.data);
       handleSearch();
     } catch (err) {
       console.error('Error al cargar datos:', err);
@@ -94,6 +99,8 @@ export const History: React.FC = () => {
     setTemp(String(m.temperatura_c));
     setTempBomba(m.temperatura_bomba_c !== null && m.temperatura_bomba_c !== undefined ? String(m.temperatura_bomba_c) : '');
     setCorr(String(m.corriente_a));
+    setEditBombaId(String(m.bomba_id));
+    setEditTanqueId(m.tanque_id ? String(m.tanque_id) : '');
     setMotivo('');
     setCorrError(null);
   };
@@ -107,6 +114,8 @@ export const History: React.FC = () => {
 
     try {
       await api.put(`/measurements/${correctionTarget.id}/correct`, {
+        bomba_id: editBombaId ? parseInt(editBombaId) : null,
+        tanque_id: editTanqueId ? parseInt(editTanqueId) : null,
         presion_succion_inhg: parseFloat(pSuc),
         presion_descarga_psi: parseFloat(pDesc),
         temperatura_c: parseFloat(temp),
@@ -349,6 +358,20 @@ export const History: React.FC = () => {
         <DialogContent>
           {corrError && <Alert severity="error" sx={{ mb: 2 }}>{corrError}</Alert>}
           <Grid container spacing={2} sx={{ pt: 1 }}>
+            <Grid item xs={6}>
+              <TextField select fullWidth label="Bomba (Opcional corregir)" value={editBombaId} onChange={(e) => setEditBombaId(e.target.value)} SelectProps={{ native: true }}>
+                <option value="">Seleccione Bomba...</option>
+                {pumps.map(p => <option key={p.id} value={p.id} style={{ background: '#1e293b' }}>{p.codigo}</option>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={6}>
+              <TextField select fullWidth label="Tanque (Opcional corregir)" value={editTanqueId} onChange={(e) => setEditTanqueId(e.target.value)} SelectProps={{ native: true }}>
+                <option value="">Ninguno / Sin Tanque</option>
+                {tanks.map(t => (
+                  <option key={t.id} value={t.id} style={{ background: '#1e293b' }}>{t.codigo}</option>
+                ))}
+              </TextField>
+            </Grid>
             <Grid item xs={6}>
               <TextField fullWidth label="P. Succión (inHg)" value={pSuc} onChange={(e) => setPSuc(e.target.value)} />
             </Grid>
