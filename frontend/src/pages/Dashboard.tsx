@@ -92,13 +92,13 @@ export const Dashboard: React.FC = () => {
 
   const handleFinishOperation = async () => {
     if (!pidData?.active_operation) return;
-    if (window.confirm('¿Confirmas el TÉRMINO DE BOMBEO? Esto finalizará la operación actual.')) {
+    if (window.confirm('¿Confirmas el TÉRMINO DE BOMBEO? Esto cortará el bombeo de los tanques actuales y limpiará el panel. La operación general del buque seguirá activa.')) {
       try {
-        await api.put(`/operations/${pidData.active_operation.id}/finish`);
+        await api.post(`/operations/${pidData.active_operation.id}/pause`);
         loadDashboardData();
       } catch (err: any) {
-        console.error('Error al finalizar operación:', err);
-        setErrorMsg(err.response?.data?.detail || 'Error al finalizar operación.');
+        console.error('Error al terminar bombeo:', err);
+        setErrorMsg(err.response?.data?.detail || 'Error al terminar bombeo.');
       }
     }
   };
@@ -164,7 +164,6 @@ export const Dashboard: React.FC = () => {
               <Button
                 variant="contained"
                 color="primary"
-                disabled={kpis?.is_paused}
                 startIcon={<PlusCircle size={18} />}
                 onClick={() => handleOpenModal()}
               >
