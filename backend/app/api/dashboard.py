@@ -46,13 +46,22 @@ def get_dashboard_kpis(
                 is_paused = True
 
         if not is_paused:
-            latest_op_m = db.query(Measurement).filter(Measurement.operation_id == active_op.id).order_by(Measurement.datetime_registro.desc()).first()
-            if latest_op_m:
-                cutoff_time = latest_op_m.datetime_registro - timedelta(minutes=5)
-                bombas_trabajando = db.query(Pump).join(Measurement).filter(
-                    Measurement.operation_id == active_op.id,
-                    Measurement.datetime_registro >= cutoff_time
-                ).distinct().count()
+            try:
+                latest_op_m = db.query(Measurement).filter(Measurement.operation_id == active_op.id).order_by(Measurement.datetime_registro.desc()).first()
+                if latest_op_m and latest_op_m.datetime_registro:
+                    import datetime as dt_mod
+                    if isinstance(latest_op_m.datetime_registro, str):
+                        dt_reg = dt_mod.datetime.fromisoformat(latest_op_m.datetime_registro.replace('Z', '+00:00'))
+                    else:
+                        dt_reg = latest_op_m.datetime_registro
+                    cutoff_time = dt_reg - timedelta(minutes=5)
+                    bombas_trabajando = db.query(Pump).join(Measurement, Pump.id == Measurement.bomba_id).filter(
+                        Measurement.operation_id == active_op.id,
+                        Measurement.datetime_registro >= cutoff_time
+                    ).distinct().count()
+            except Exception as e:
+                print(f"Error calculando bombas_trabajando: {e}")
+                bombas_trabajando = 0
 
         active_measurements = db.query(Measurement).filter(Measurement.operation_id == active_op.id).all()
         total_mediciones = len(active_measurements)
